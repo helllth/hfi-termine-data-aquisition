@@ -64,3 +64,6 @@ localconfig.json
 out
 docker-compose.yml
 in
+.package.json.without.version
+.version
+.githash
