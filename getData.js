@@ -184,7 +184,7 @@ function getAwayTeam(game) {
 }
 function getTeamName(game, team) {
   if (team.indexOf("Illtal") === -1) {
-    return team;
+    return addSpacesForSyllabification(team);
   } else {
     if (team.indexOf("MSG") !== -1) {
       team = team.replace('MSG ', '');
@@ -194,7 +194,17 @@ function getTeamName(game, team) {
       return `<b>${getJSGPrefix(game)} ${team}</b>`
     }
   }
+}
 
+function addSpacesForSyllabification(_word) {
+  let word = _word;
+  const charsToEnhanceWithSpaces = ['/', '-'];
+  for (const eChar of charsToEnhanceWithSpaces) {
+    const parts = word.split(eChar);
+    const newParts = parts.map((x) => " " + x.trim() + " ");
+    word = newParts.join(eChar);
+  }
+  return word;
 }
 function getJSGPrefix(game) {
 
