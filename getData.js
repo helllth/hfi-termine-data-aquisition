@@ -130,6 +130,7 @@ function getTableCSV(games) {
       }
 
       if (game.Hallenname !== undefined && game.Hallenname.indexOf('Uchtelfangen') !== -1) {
+        game.Hallenname = 'Sporthalle';
         game.Ort = 'Uchtelfangen';
       }
       csv = csv + `,${game.Zeit || '??? Uhr'},"<div title=""${game.Strasse || '???'}"">${game.Hallenname || '???'}</div>",${game.Ort || '???'},"${getHomeTeam(game)}","${getAwayTeam(game)}"\n`
