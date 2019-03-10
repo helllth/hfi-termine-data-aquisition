@@ -67,3 +67,5 @@ in
 .package.json.without.version
 .version
 .githash
+
+.DS_Store

@@ -1,16 +1,17 @@
 import fetch from 'node-fetch';
 import convert from 'xml-js';
-import _ from 'lodash';
+//import _ from 'lodash';
 import fs from 'fs';
 import md5 from 'md5';
 import FormData from 'form-data';
 import AdmZip from 'adm-zip';
 import csv from 'csvtojson';
 
-
-String.prototype.replaceAll = function(search, replacement) {
+String.prototype.replaceAll = function (search, replacement) {
   var target = this;
-  return target.split(search).join(replacement);
+  return target
+    .split(search)
+    .join(replacement);
 };
 
 console.log("started");
@@ -39,7 +40,12 @@ let jsg = getGamesForTeam(210047);
 Promise
   .all([msg, jsg])
   .then(values => {
+    console.log('manualDates', manualDates);
+
     const all = values[0].concat(values[1], manualDates);
+
+    console.log('all.length', all.length);
+    console.log('all.last', all[all.length - 1]);
 
     const allSorted = all.sort((a, b) => {
       const x = Date.parse(a.ts) || 0;
@@ -66,24 +72,38 @@ Promise
       return testtime >= realToday.getTime();
     });
 
-
     writeTable("aktuelle.Woche", getTableCSV(thisWeek));
     writeTable("naechste.Woche", getTableCSV(nextWeek));
-   // writeTable("gesamtSpielplan", getTableCSV(all));
+    writeTable("gesamtSpielplan", getTableCSV(all));
     writeTable("noch.zu.spielen", getTableCSV(openGames));
 
+    writeTable("aktuelle.Woche.small", getTableForMobileCSV(thisWeek));
+    writeTable("naechste.Woche.small", getTableForMobileCSV(nextWeek));
+    writeTable("gesamtSpielplan.small", getTableForMobileCSV(all));
+    writeTable("noch.zu.spielen.small", getTableForMobileCSV(openGames));
 
-    const teams = ['HF Illtal', 'HF Illtal 2', 'HF Illtal 3', 'HF Illtal 4', 'mJA HF Illtal', 'mJA HF Illtal 2',  'mJB HF Illtal',  'mJD HF Illtal', 'mJE HF Illtal', 'gJF HF Illtal']
-    for (const team of teams){
+    const teams = [
+      'HF Illtal',
+      'HF Illtal 2',
+      'HF Illtal 3',
+      'HF Illtal 4',
+      'mJA HF Illtal',
+      'mJA HF Illtal 2',
+      'mJB HF Illtal',
+      'mJD HF Illtal',
+      'mJE HF Illtal',
+      'gJF HF Illtal'
+    ]
+    for (const team of teams) {
       const openGamesForTeam = all.filter((game) => {
         const testtime = Date.parse(game.ts);
-        const teamtest=`<b>${team}</b>`;
-        return testtime >= realToday.getTime() && (getHomeTeam(game)===teamtest || getAwayTeam(game)===teamtest);
+        const teamtest = `<b>${team}</b>`;
+        return testtime >= realToday.getTime() && (getHomeTeam(game) === teamtest || getAwayTeam(game) === teamtest);
       });
-      writeTable(`noch.zu.spielen.${team.replaceAll(' ','_')}`, getTableCSV(openGamesForTeam));
+      writeTable(`noch.zu.spielen.${team.replaceAll(' ', '_')}`, getTableCSV(openGamesForTeam));
+      writeTable(`noch.zu.spielen.small${team.replaceAll(' ', '_')}`, getTableForMobileCSV(openGamesForTeam));
 
     }
-
 
   });
 
@@ -97,7 +117,7 @@ function getTableCSV(games) {
   if (games.length > 0) {
     let csv = 'Datum,Uhrzeit,Halle,Ort,Heim,Gast\n';
     let currentDate = undefined;
-    for (const game of games) { 
+    for (const game of games) {
       if (currentDate !== game.Datum) {
         currentDate = game.Datum;
         var options = {
@@ -109,10 +129,10 @@ function getTableCSV(games) {
         csv = csv + `"<font color=""#e3000b"">${getWeekday(parsedTimeStamp)}, ${pad(parsedTimeStamp.getDate()) + "." + pad(parsedTimeStamp.getMonth() + 1) + "." + parsedTimeStamp.getFullYear()}</font>",#colspan#,#colspan#,,,\n`;
       }
 
-      if (game.Hallenname!==undefined && game.Hallenname.indexOf('Uchtelfangen')!==-1){
-        game.Ort='Uchtelfangen';
+      if (game.Hallenname !== undefined && game.Hallenname.indexOf('Uchtelfangen') !== -1) {
+        game.Ort = 'Uchtelfangen';
       }
-      csv = csv + `,${game.Zeit||'???' + ' Uhr'},"<div title=""${game.Strasse||'???'}"">${game.Hallenname||'???'}</div>",${game.Ort||'???'},"${getHomeTeam(game)}","${getAwayTeam(game)}"\n`
+      csv = csv + `,${game.Zeit || '??? Uhr'},"<div title=""${game.Strasse || '???'}"">${game.Hallenname || '???'}</div>",${game.Ort || '???'},"${getHomeTeam(game)}","${getAwayTeam(game)}"\n`
     }
     return csv;
   } else {
@@ -120,6 +140,36 @@ function getTableCSV(games) {
       'olspan#,#colspan#,#colspan#,#colspan#,#colspan#';
   }
 }
+
+function getTableForMobileCSV(games) {
+  if (games.length > 0) {
+    let csv = '<center>⏱</center>,<center>Heim</center>,<center>Gast</center>\n';
+    let currentDate = undefined;
+    for (const game of games) {
+      if (currentDate !== game.Datum) {
+        currentDate = game.Datum;
+        var options = {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        };
+        const parsedTimeStamp = new Date(Date.parse(game.ts));
+        csv = csv + `"<font color=""#e3000b"">${getWeekday(parsedTimeStamp)}, ${pad(parsedTimeStamp.getDate()) + "." + pad(parsedTimeStamp.getMonth() + 1) + "." + parsedTimeStamp.getFullYear()}</font>",#colspan#,#colspan#,,,\n`;
+      }
+
+      if (game.Hallenname !== undefined && game.Hallenname.indexOf('Uchtelfangen') !== -1) {
+        game.Ort = 'Uchtelfangen';
+      }
+      csv = csv + `${game.Zeit || '??? Uhr'},"${getHomeTeam(game)}","${getAwayTeam(game)}"\n`
+      csv = csv + `,"<font  size=""2"">${game.Hallenname || '???'} in ${game.Ort || '???'}</font>",#colspan#\n`
+    }
+    return csv;
+  } else {
+    return '<center>⏱</center>,<center>Heim</center>,<center>Gast</center>\n"<div align=""ce' +
+      'nter"">keine Spiele</div>",#colspan#,#colspan#';
+  }
+}
+
 function pad(n) {
   return n < 10
     ? "0" + n
