@@ -1,10 +1,10 @@
 {
   "name": "hfi-termine-data-aquisition",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "main": "getData.js",
   "license": "MIT",
   "config": {
-    "dockerRegistryPath": "cismet" 
+    "dockerRegistryPath": "cismet"
   },
   "dependencies": {
     "adm-zip": "^0.4.13",
