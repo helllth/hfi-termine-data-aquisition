@@ -101,7 +101,7 @@ Promise
         return testtime >= realToday.getTime() && (getHomeTeam(game) === teamtest || getAwayTeam(game) === teamtest);
       });
       writeTable(`noch.zu.spielen.${team.replaceAll(' ', '_')}`, getTableCSV(openGamesForTeam));
-      writeTable(`noch.zu.spielen.small${team.replaceAll(' ', '_')}`, getTableForMobileCSV(openGamesForTeam));
+      writeTable(`noch.zu.spielen.small.${team.replaceAll(' ', '_')}`, getTableForMobileCSV(openGamesForTeam));
 
     }
 
