@@ -154,7 +154,7 @@ function getTableForMobileCSV(games) {
           day: '2-digit'
         };
         const parsedTimeStamp = new Date(Date.parse(game.ts));
-        csv = csv + `"<font color=""#e3000b"">${getWeekday(parsedTimeStamp)}, ${pad(parsedTimeStamp.getDate()) + "." + pad(parsedTimeStamp.getMonth() + 1) + "." + parsedTimeStamp.getFullYear()}</font>",#colspan#,#colspan#,,,\n`;
+        csv = csv + `"<font color=""#e3000b"">${getWeekday(parsedTimeStamp)}, ${pad(parsedTimeStamp.getDate()) + "." + pad(parsedTimeStamp.getMonth() + 1) + "." + parsedTimeStamp.getFullYear()}</font>",#colspan#,#colspan#\n`;
       }
 
       if (game.Hallenname !== undefined && game.Hallenname.indexOf('Uchtelfangen') !== -1) {
