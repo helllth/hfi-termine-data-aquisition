@@ -127,9 +127,6 @@ function getTableCSV(games) {
 		let csv = 'Datum,Uhrzeit,Halle,Ort,Heim,Gast\n';
 		let currentDate = undefined;
 		for (const game of games) {
-			console.log('game', game.Nummer);
-			console.log('game', cancelledGames);
-
 			const cancelled = cancelledGames.indexOf(game['Nummer']) !== -1;
 			if (currentDate !== game.Datum) {
 				currentDate = game.Datum;
@@ -187,6 +184,8 @@ function getTableForMobileCSV(games) {
 		let csv = '<center>⏱</center>,<center>Heim</center>,<center>Gast</center>\n';
 		let currentDate = undefined;
 		for (const game of games) {
+			const cancelled = cancelledGames.indexOf(game['Nummer']) !== -1;
+
 			if (currentDate !== game.Datum) {
 				currentDate = game.Datum;
 				var options = {
@@ -209,11 +208,16 @@ function getTableForMobileCSV(games) {
 			if (game.Hallenname !== undefined && game.Hallenname.indexOf('Uchtelfangen') !== -1) {
 				game.Ort = 'Uchtelfangen';
 			}
-			csv = csv + `${game.Zeit || '??? Uhr'},"${getHomeTeam(game)}","${getAwayTeam(game)}"\n`;
 			csv =
 				csv +
-				`,"<font  size=""2"">${game.Hallenname || '???'} in ${game.Ort ||
-					'???'}</font>",#colspan#\n`;
+				`${evEl(game.Zeit || '??? Uhr', cancelled)},"${evEl(
+					getHomeTeam(game),
+					cancelled
+				)}","${evEl(getAwayTeam(game), cancelled)}"\n`;
+
+			const ortsinfo = (game.Hallenname || '???') + ' in ' + (game.Ort || '???');
+
+			csv = csv + `,"<font  size=""2"">${evEl(ortsinfo, cancelled)}</font>",#colspan#\n`;
 		}
 		return csv;
 	} else {
