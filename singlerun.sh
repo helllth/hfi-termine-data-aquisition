@@ -1,7 +1,10 @@
 #!/bin/sh
 
 cd /app
-echo echo Loding offers on $(date)
-yarn start
-echo echo Done with loading offers on $(date)
+echo get Calendar Data on $(date)
+yarn run calData
+echo echo Done with getting Calendar Data on $(date)
+echo get Leaderboard Data on $(date)
+yarn run lbData
+echo echo Done with getting Leaderboard Data on $(date)
 echo -------------------------------------------------------------------------------------

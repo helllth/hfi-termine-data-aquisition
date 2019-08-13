@@ -62,6 +62,7 @@ tmp
 servicetmp
 localconfig.json
 out
+out2
 docker-compose.yml
 in
 .package.json.without.version

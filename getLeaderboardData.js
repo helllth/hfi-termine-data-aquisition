@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import convert from 'xml-js';
 //import _ from 'lodash';
-import fs from 'fs';
+import fs from 'fs-extra';
 import md5 from 'md5';
 import FormData from 'form-data';
 import AdmZip from 'adm-zip';
@@ -42,10 +42,9 @@ let nextButOneMonday = new Date(
 	nextButOneSunday.getDate() + 1
 );
 
-// console.log('today', today + '');
-// console.log('lastMonday', lastMonday + '');
-// console.log('nextSunday', nextSunday + '');
-// console.log('nextButOneSunday', nextButOneSunday + '');
+// console.log('today', today + ''); console.log('lastMonday', lastMonday + '');
+// console.log('nextSunday', nextSunday + ''); console.log('nextButOneSunday',
+// nextButOneSunday + '');
 
 const saison = '18/19';
 
@@ -79,28 +78,25 @@ let seed = {
 };
 
 let leagues = {
-	'M-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&all=1'
-	// 'M-VL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34939&all=1',
-	// 'M-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&all=1',
-	// 'M-BL-S': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&all=1',
-	// 'mJA-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&all=1',
-	// 'mJA-SLL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&all=1',
-	// 'mJB-BZL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&all=1',
-	// 'mJD-BZL-4': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&all=1',
-	// 'mJE-BZL-1': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&all=1',
-	// 'gJF-M': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670&all=1'
+	'M-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&all=1',
+	'M-VL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34939&all=1',
+	'M-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&all=1',
+	'M-BL-S': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&all=1',
+	'mJA-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&all=1',
+	'mJA-SLL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&all=1',
+	'mJB-BZL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&all=1',
+	'mJD-BZL-4': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&all=1',
+	'mJE-BZL-1': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&all=1',
+	'gJF-M': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670&all=1'
 };
 
 let teams = {
-	hfi1: { league: 'M-OLRPS' }
-	// hfi2: { league: 'M-VL' },
-	// hfi3: { league: 'M-BZL-O' },
-	// hfi4: { league: 'M-BL-S' },
-	// a: { league: 'mJA-OLRPS' },
-	// a2: { league: 'mJA-SLL' },
-	// b: { league: 'mJB-BZL' },
-	// d: { league: 'mJD-BZL-4' },
-	// e: { league: 'mJE-BZL-1' },
+	hfi1: {
+		league: 'M-OLRPS'
+	}
+	// hfi2: { league: 'M-VL' }, hfi3: { league: 'M-BZL-O' }, hfi4: { league:
+	// 'M-BL-S' }, a: { league: 'mJA-OLRPS' }, a2: { league: 'mJA-SLL' }, b: {
+	// league: 'mJB-BZL' }, d: { league: 'mJD-BZL-4' }, e: { league: 'mJE-BZL-1' },
 	// f: { league: 'gJF-M' }json
 };
 
@@ -111,6 +107,13 @@ Object.keys(leagues).forEach(function(k) {
 });
 
 Promise.all(promises).then((values) => {
+	fs.ensureDirSync('out/raw');
+	fs.ensureDirSync('out/json/current/leaderboards/');
+	fs.ensureDirSync('out/html/current/leaderboards/');
+	fs.ensureDirSync('out/json/current/games.and.results/complete/');
+	fs.ensureDirSync('out/html/current/games.and.results/hfi/');
+	fs.ensureDirSync('out/json/current/games.and.results/hfi/');
+
 	for (const el of values) {
 		console.log('+++++++++' + el.key);
 
@@ -131,9 +134,7 @@ Promise.all(promises).then((values) => {
 		}
 
 		if (el.scoretable !== '<table>null</table>') {
-			//Leaderboards erzeugen
-
-			//Html
+			//Leaderboards erzeugen Html
 			fs.writeFile(`out/raw/leaderboard.${el.key}.html`, el.scoretable, 'utf8', () =>
 				console.log(`leaderboard.${el.key}.html geschrieben`)
 			);
@@ -157,7 +158,7 @@ Promise.all(promises).then((values) => {
 						spiele: row['2'],
 						siege: row['3'],
 						unentschieden: row['4'],
-						niederlagen: row['4'],
+						niederlagen: row['5'],
 						torePlus: row['6'],
 						toreMinus: row['8'],
 						punktePlus: row['9'],
@@ -184,9 +185,7 @@ Promise.all(promises).then((values) => {
 		}
 
 		if (el.gametable !== '<table>null</table>') {
-			// Spiellisten schreiben
-
-			//Html
+			// Spiellisten schreiben Html
 			fs.writeFile(
 				`out/raw/games.and.results.table.${el.key}.html`,
 				el.gametable,
@@ -225,7 +224,7 @@ Promise.all(promises).then((values) => {
 			}
 
 			fs.writeFile(
-				`out/json/current/games.and.results/${el.key}.json`,
+				`out/json/current/games.and.results/complete/${el.key}.json`,
 				JSON.stringify(gamesAndResults, null, 2),
 				'utf8',
 				() => console.log(`games.and.results.${el.key}.json geschrieben`)
@@ -235,9 +234,24 @@ Promise.all(promises).then((values) => {
 			let gamesAndResultsHtml = createGamesAndResultsHtml(gamesAndResults, 'HF Illtal');
 			fs.writeFile(
 				`out/html/current/games.and.results/hfi/${el.key}.html`,
-				leaderBoardHtml,
+				gamesAndResultsHtml,
 				'utf8',
-				() => console.log(`leaderboards/${el.key}.html geschrieben`)
+				() => console.log(`games.and.results/hfi/${el.key}.html geschrieben`)
+			);
+
+			// filtered JSON
+			let filteredGamesAndResults = gamesAndResults;
+			let filterTeam = 'HF Illtal';
+			if (filterTeam) {
+				filteredGamesAndResults = gamesAndResults.filter(
+					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
+				);
+			}
+			fs.writeFile(
+				`out/json/current/games.and.results/hfi/${el.key}.json`,
+				JSON.stringify(filteredGamesAndResults, null, 2),
+				'utf8',
+				() => console.log(`hfi/games.and.results.${el.key}.json geschrieben`)
 			);
 		}
 	}
@@ -297,12 +311,12 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 		<td align="left">${row.datum}</td>
 		<td align="left">${row.halle}</td>
 		<td align="left">${row.heim}</td>
-		<td align="center">:</td>
+		<td align="center"></td>
 		<td align="left">${row.gast}</td>
 		<td align="center">${row.toreHeim}</td>
 		<td align="center">:</td>
 		<td align="center">${row.toreGast}</td>
-		<td align="center"><a href="${row.linkPI}"</td>
+		<td align="center"><a target="_handball4all" href="${row.linkPI}">Spielbericht</a></td>
 	  </tr>`;
 	}
 	html += `</table>`;

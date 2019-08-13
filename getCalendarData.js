@@ -46,12 +46,17 @@ console.log('today', today + '');
 console.log('lastMonday', lastMonday + '');
 console.log('nextSunday', nextSunday + '');
 console.log('nextButOneSunday', nextButOneSunday + '');
-let msg = getGamesForTeam(210032);
+let msg = getGamesForTeam(
+	210032,
+	'"Nummer";"Staffel";"Datum";"Zeit";"Hallennummer";"Heim";"Gast";"Hallenname";"Plz' +
+		'";"Ort";"Strasse";"Telefon";"Haftmittel?"'
+);
 let jsg = getGamesForTeam(210047);
-Promise.all([ msg, jsg ]).then((values) => {
-	console.log('manualDates', manualDates);
+//let jsg = [];
+Promise.all([ jsg ]).then((values) => {
+	//console.log('manualDates', manualDates);
 
-	const all = values[0].concat(values[1], manualDates);
+	const all = [].concat(...values).concat(manualDates);
 
 	console.log('all.length', all.length);
 	console.log('all.last', all[all.length - 1]);
@@ -77,15 +82,15 @@ Promise.all([ msg, jsg ]).then((values) => {
 		return testtime >= realToday.getTime();
 	});
 
-	writeTable('aktuelle.Woche', getTableCSV(thisWeek));
-	writeTable('naechste.Woche', getTableCSV(nextWeek));
-	writeTable('gesamtSpielplan', getTableCSV(all));
-	writeTable('noch.zu.spielen', getTableCSV(openGames));
+	writeData('aktuelle.Woche', '', thisWeek);
+	writeData('naechste.Woche', '', nextWeek);
+	writeData('gesamtSpielplan', '', all);
+	writeData('noch.zu.spielen', '', openGames);
 
-	writeTable('aktuelle.Woche.small', getTableForMobileCSV(thisWeek));
-	writeTable('naechste.Woche.small', getTableForMobileCSV(nextWeek));
-	writeTable('gesamtSpielplan.small', getTableForMobileCSV(all));
-	writeTable('noch.zu.spielen.small', getTableForMobileCSV(openGames));
+	// writeData('aktuelle.Woche.small', getTableForMobileCSV(thisWeek));
+	// writeData('naechste.Woche.small', getTableForMobileCSV(nextWeek));
+	// writeData('gesamtSpielplan.small', getTableForMobileCSV(all));
+	// writeData('noch.zu.spielen.small', getTableForMobileCSV(openGames));
 
 	const teams = [
 		'HF Illtal',
@@ -108,15 +113,21 @@ Promise.all([ msg, jsg ]).then((values) => {
 				(getHomeTeam(game) === teamtest || getAwayTeam(game) === teamtest)
 			);
 		});
-		writeTable(`noch.zu.spielen.${team.replaceAll(' ', '_')}`, getTableCSV(openGamesForTeam));
-		writeTable(
-			`noch.zu.spielen.small.${team.replaceAll(' ', '_')}`,
-			getTableForMobileCSV(openGamesForTeam)
-		);
+		writeData(`noch.zu.spielen`, team.replaceAll(' ', '_'), openGamesForTeam);
 	}
 });
 
 //msg=210032
+
+function writeData(name1, name2, data) {
+	const name = name1 + (name2 !== '' ? '.' : '') + name2;
+	writeTable(name, getTableCSV(data));
+	writeTable(name1 + '.small' + (name2 !== '' ? '.' : '') + name2, getTableForMobileCSV(data));
+
+	fs.writeFile(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
+		console.log(`${name}.json geschrieben`)
+	);
+}
 
 function writeTable(name, csvdata) {
 	fs.writeFile(`out/${name}.csv`, csvdata, 'utf8', () => console.log(`${name}.csv geschrieben`));
@@ -292,7 +303,9 @@ function endOfWeek(date) {
 	return new Date(d.setDate(lastday));
 }
 
-async function getGamesForTeam(teamId) {
+async function getGamesForTeam(teamId, csvHeader = undefined) {
+	console.log('getData for teamId:', teamId);
+
 	const url = 'http://spo.handball4all.de/Spielbetrieb/mannschaftsspielplaene.php';
 	let fd = new FormData();
 	// 'm=16' -F 'nm=0' -F 'clubno=210032' -F 'lgym=1' -F 'own=1' -F 'onefile=1' -F
@@ -319,10 +332,20 @@ async function getGamesForTeam(teamId) {
 	var zip = new AdmZip(buffer);
 	var zipEntries = zip.getEntries();
 	for (var i = 0; i < zipEntries.length; i++) {
-		const txt = zip.readAsText(zipEntries[i], 'binary');
+		let txt;
+		if (csvHeader) {
+			txt = csvHeader + '\n';
+		} else {
+			txt = '';
+		}
+		txt = txt + zip.readAsText(zipEntries[i], 'binary').trim();
+		// console.log('-------------------------------------');
+		// console.log('txt', txt);
+		// console.log('-------------------------------------');
 		const jsonObj = await csv({ noheader: false, delimiter: ';' }).fromString(txt);
-		// console.log('JSON',jsonObj);
+		//console.log('JSON', jsonObj);
 		for (let entry of jsonObj) {
+			// try {
 			const day = entry.Datum.substr(0, 2);
 			const month = entry.Datum.substr(3, 2);
 			const year = '20' + entry.Datum.substr(6, 2);
@@ -331,6 +354,7 @@ async function getGamesForTeam(teamId) {
 			entry.ts = new Date(year, month - 1, day, hour, minute).toLocaleString('de-DE', {
 				timeZone: 'Europe/Berlin'
 			});
+			// } catch (e) { console.log('fehler', e); console.log('in ', entry); }
 		}
 		return jsonObj;
 	}
