@@ -1,25 +1,5 @@
 #!/bin/sh
-PARAM=$@
-
-echo "Entrypoint started with $PARAM"
-
-
-case "$1" in
-        --single-run)
-            /singlerun.sh
-            ;;
-         
-        --crond-forever)
-            crontab /etc/cron/crontab
-            crond  -f
-            ;;
-         
-        --single-run-now-and-crond-forever)
-            /singlerun.sh
-            crontab /etc/cron/crontab
-            crond  -f
-            ;;
-        *)
-            echo "Usage: $0 {--single-run|--crond-forever|--single-run-now-and-crond-forever}"
-            exit 1
-esac 
+#sleep infinity
+cat /etc/cron/crontab | sed '/..*/{s/$/ >> \/proc\/1\/fd\/1 2\>\/proc\/1\/fd\/2/}' > /etc/cron/crontabREDIR
+crontab /etc/cron/crontabREDIR
+cron  -f

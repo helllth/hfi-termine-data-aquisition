@@ -1,2 +1,5 @@
-* * * * * echo "You should provide your own crontab in a volume at /etc/cron/crontab" >> /dev/stdout 2>&1
+#* * * * * /usr/bin/yarn --cwd /app/ run calData --help
+
+# will add >> /proc/1/fd/1 2>/proc/1/fd/2 to each line. so please no further redirecting 
+
 # crontab requires an empty line at the end of the file
