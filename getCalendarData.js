@@ -53,7 +53,7 @@ let msg = getGamesForTeam(
 );
 let jsg = getGamesForTeam(210047);
 //let jsg = [];
-Promise.all([ jsg ]).then((values) => {
+Promise.all([ jsg, msg ]).then((values) => {
 	//console.log('manualDates', manualDates);
 
 	const all = [].concat(...values).concat(manualDates);

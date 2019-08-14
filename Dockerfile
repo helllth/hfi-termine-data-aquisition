@@ -1,21 +1,22 @@
-FROM node:alpine
+FROM node
+RUN apt-get update -y
+RUN apt-get install -y locales
 
 ENV LOCALE de_DE
 ENV ENCODING UTF-8
 
+RUN locale-gen ${LOCALE}.${ENCODING}
 ENV LANG ${LOCALE}.${ENCODING}
 ENV LANGUAGE ${LOCALE}.${ENCODING}
 ENV LC_ALL ${LOCALE}.${ENCODING}
 ENV TZ Europe/Berlin
 
-RUN apk add --update tzdata
-RUN echo ${TZ} /etc/timezone
-
 RUN echo "LC_ALL=${LOCALE}.${ENCODING}" >> /etc/environment
 RUN echo "${LOCALE}.${ENCODING} ${ENCODING}" >> /etc/locale.gen
 RUN echo "LANG=${LOCALE}.${ENCODING}" > /etc/locale.conf
 
-# Create app directory
+RUN locale-gen --purge
+
 WORKDIR /app
 
 # Install app dependencies
