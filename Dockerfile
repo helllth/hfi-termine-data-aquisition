@@ -39,7 +39,8 @@ COPY once.sh /
 COPY regular.sh /
 
 RUN chmod +x /entrypoint.sh
-RUN chmod +x /singlerun.sh
+RUN chmod +x /once.sh
+RUN chmod +x /regular.sh
 
 ENV LIMIT 10000
 
