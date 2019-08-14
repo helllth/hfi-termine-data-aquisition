@@ -1,6 +1,6 @@
 {
 	"name": "hfi-termine-data-aquisition",
-	"version": "0.9.12",
+	"version": "0.10.0",
 	"main": "getData.js",
 	"license": "MIT",
 	"config": {
