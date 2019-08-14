@@ -35,7 +35,8 @@ COPY *.js ./
 COPY dummycrontab /etc/cron/crontab
 
 COPY entrypoint.sh /
-COPY singlerun.sh /
+COPY once.sh /
+COPY regular.sh /
 
 RUN chmod +x /entrypoint.sh
 RUN chmod +x /singlerun.sh

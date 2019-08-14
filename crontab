@@ -1,6 +1,7 @@
 # crontab requires an empty line at the end of the file
 #* * * * * /usr/bin/yarn --cwd /app/ run calData --help
-0,15,30,45 * * * * /singlerun.sh
+0,15,30,45 * * * * /regular.sh
+7 12 * * FRI /once.sh
 # will add >> /proc/1/fd/1 2>/proc/1/fd/2 to each line. so please no further redirecting 
 
 # crontab requires an empty line at the end of the file
