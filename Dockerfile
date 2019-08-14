@@ -1,4 +1,4 @@
-FROM node
+FROM node:8-jessie
 RUN apt-get update -y
 RUN apt-get install -y locales cron 
 

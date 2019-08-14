@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import convert from 'xml-js';
 //import _ from 'lodash';
-import fs from 'fs';
+import fs from 'fs-extra';
 import md5 from 'md5';
 import FormData from 'form-data';
 import AdmZip from 'adm-zip';
@@ -14,21 +14,11 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 console.log('started');
-//let jsg = [];
+fs.ensureDirSync('out/json');
 
 getHallenlisten();
 
 //msg=210032
-
-function writeData(name1, name2, data) {
-	const name = name1 + (name2 !== '' ? '.' : '') + name2;
-	writeTable(name, getTableCSV(data));
-	writeTable(name1 + '.small' + (name2 !== '' ? '.' : '') + name2, getTableForMobileCSV(data));
-
-	fs.writeFile(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
-		console.log(`${name}.json geschrieben`)
-	);
-}
 
 // function writeTable(name, csvdata) {
 // 	fs.writeFile(`out/${name}.csv`, csvdata, 'utf8', () => console.log(`${name}.csv geschrieben`));
@@ -72,7 +62,6 @@ async function getHallenlisten() {
 	});
 	let arrayBuffer = await response.arrayBuffer();
 	let txt = iconv.decode(new Buffer(arrayBuffer), 'iso-8859-15').toString();
-	console.log('txt', txt);
 
 	const jsonObj = await csv({ noheader: false, delimiter: ';' }).fromString(txt);
 	fs.writeFile(`out/json/hallenverzeichniss.json`, JSON.stringify(jsonObj, null, 2), 'utf8', () =>

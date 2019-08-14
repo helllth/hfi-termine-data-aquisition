@@ -15,7 +15,13 @@ String.prototype.replaceAll = function(search, replacement) {
 	return target.split(search).join(replacement);
 };
 
-console.log('started');
+fs.ensureDirSync('out/json/current/leaderboards/');
+fs.ensureDirSync('out/json/current/games.and.results/complete/');
+fs.ensureDirSync('out/json/current/games.and.results/hfi/');
+fs.ensureDirSync('out/html/current/leaderboards/');
+fs.ensureDirSync('out/html/current/games.and.results/hfi/');
+fs.ensureDirSync('out/raw');
+
 let today = new Date();
 
 if (today.getDay() === 0) {
@@ -107,13 +113,6 @@ Object.keys(leagues).forEach(function(k) {
 });
 
 Promise.all(promises).then((values) => {
-	fs.ensureDirSync('out/raw');
-	fs.ensureDirSync('out/json/current/leaderboards/');
-	fs.ensureDirSync('out/html/current/leaderboards/');
-	fs.ensureDirSync('out/json/current/games.and.results/complete/');
-	fs.ensureDirSync('out/html/current/games.and.results/hfi/');
-	fs.ensureDirSync('out/json/current/games.and.results/hfi/');
-
 	for (const el of values) {
 		console.log('+++++++++' + el.key);
 

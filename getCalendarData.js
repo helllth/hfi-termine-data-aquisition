@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import convert from 'xml-js';
 //import _ from 'lodash';
-import fs from 'fs';
+import fs from 'fs-extra';
 import md5 from 'md5';
 import FormData from 'form-data';
 import AdmZip from 'adm-zip';
@@ -13,6 +13,10 @@ String.prototype.replaceAll = function(search, replacement) {
 };
 
 console.log('started');
+
+//ensure that all dirs are existing
+fs.ensureDirSync('out/json');
+
 let manualDates = JSON.parse(fs.readFileSync('in/manual.json'));
 let cancelledGames = JSON.parse(fs.readFileSync('in/cancelled.json'));
 let today = new Date();
