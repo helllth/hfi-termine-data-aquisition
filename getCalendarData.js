@@ -52,8 +52,10 @@ let msg = getGamesForTeam(
 		'";"Ort";"Strasse";"Telefon";"Haftmittel?"'
 );
 let jsg = getGamesForTeam(210047);
-//let jsg = [];
-Promise.all([ jsg, msg ]).then((values) => {
+let sg_jsg_dw = getGamesForTeam(219522);
+let jsg_ds = getGamesForTeam(210009);
+
+Promise.all([ msg, jsg, sg_jsg_dw, jsg_ds ]).then((values) => {
 	//console.log('manualDates', manualDates);
 
 	const all = [].concat(...values).concat(manualDates);
@@ -93,27 +95,51 @@ Promise.all([ jsg, msg ]).then((values) => {
 	// writeData('noch.zu.spielen.small', getTableForMobileCSV(openGames));
 
 	const teams = [
-		'HF Illtal',
-		'HF Illtal 2',
-		'HF Illtal 3',
-		'HF Illtal 4',
-		'mJA HF Illtal',
-		'mJA HF Illtal 2',
-		'mJB HF Illtal',
-		'mJD HF Illtal',
-		'mJE HF Illtal',
-		'gJF HF Illtal'
+		[ 'HF Illtal' ],
+		[ 'HF Illtal 2' ],
+		[ 'HF Illtal 3' ],
+		[ 'HF Illtal 4' ],
+		[ 'mJA HF Illtal' ],
+		[ 'mJA HF Illtal 2' ],
+		[ 'mJB HF Illtal' ],
+		[ 'mJD HF Illtal', 'mJD HF Illtal 2', 'wJD JSG Dirmingen-Schaumberg' ],
+		[ 'mJE HF Illtal' ],
+		[ 'gJF HF Illtal' ]
 	];
-	for (const team of teams) {
-		const openGamesForTeam = all.filter((game) => {
-			const testtime = Date.parse(game.ts);
-			const teamtest = `<b>${team}</b>`;
-			return (
-				testtime >= realToday.getTime() &&
-				(getHomeTeam(game) === teamtest || getAwayTeam(game) === teamtest)
-			);
-		});
-		writeData(`noch.zu.spielen`, team.replaceAll(' ', '_'), openGamesForTeam);
+	for (const teamArr of teams) {
+		const team = teamArr[0];
+		if (teamArr.length === 1) {
+			const openGamesForTeam = all.filter((game) => {
+				const testtime = Date.parse(game.ts);
+				const teamtest = `<b>${team}</b>`;
+				return (
+					testtime >= realToday.getTime() &&
+					(getHomeTeam(game) === teamtest || getAwayTeam(game) === teamtest)
+				);
+			});
+			writeData(`noch.zu.spielen`, team.replaceAll(' ', '_'), openGamesForTeam);
+		} else {
+			const openGamesForTeam = all.filter((game) => {
+				const testtime = Date.parse(game.ts);
+				let match = false;
+				let timeMatch = testtime >= realToday.getTime();
+				if (timeMatch) {
+					for (const team of teamArr) {
+						const teamtest = `<b>${team}</b>`;
+						match =
+							match ||
+							getHomeTeam(game) === teamtest ||
+							getAwayTeam(game) === teamtest;
+						if (match) {
+							return true;
+						}
+					}
+				}
+				return false;
+			});
+			const team4Filename = teamArr[0];
+			writeData(`noch.zu.spielen`, team4Filename.replaceAll(' ', '_'), openGamesForTeam);
+		}
 	}
 });
 
@@ -250,9 +276,10 @@ function getAwayTeam(game) {
 	return getTeamName(game, game.Gast);
 }
 function getTeamName(game, team) {
-	if (team.indexOf('Illtal') === -1) {
-		return addSpacesForSyllabification(team);
-	} else {
+	team = team.replace('SG JSG HF Illtal - HSG Dudweiler-Fischbach', 'JSG HF Illtal');
+	//team = team.replace('JSG Dirmingen-Schaumberg', 'JSG HF Illtal (JSG Dirmingen-Schaumberg)');
+
+	if (team.indexOf('Illtal') !== -1) {
 		if (team.indexOf('MSG') !== -1) {
 			team = team.replace('MSG ', '');
 			return `<b>${team}</b>`;
@@ -260,6 +287,10 @@ function getTeamName(game, team) {
 			team = team.replace('JSG ', '');
 			return `<b>${getJSGPrefix(game)} ${team}</b>`;
 		}
+	} else if (team.indexOf('Dirmingen') !== -1) {
+		return `<b>${getJSGPrefix(game)} ${team}</b>`;
+	} else {
+		return addSpacesForSyllabification(team);
 	}
 }
 
