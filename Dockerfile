@@ -1,6 +1,6 @@
 FROM node
 RUN apt-get update -y
-RUN apt-get install -y locales
+RUN apt-get install -y locales cron 
 
 ENV LOCALE de_DE
 ENV ENCODING UTF-8
@@ -43,4 +43,3 @@ RUN chmod +x /singlerun.sh
 ENV LIMIT 10000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["--single-run"]
