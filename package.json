@@ -35,6 +35,7 @@
 		"calData": "babel-node getCalendarData.js",
 		"lbData": "babel-node getLeaderboardData.js",
 		"getRegularUpdates": "babel-node getCalendarData.js && babel-node getLeaderboardData.js",
+		"all": "babel-node getHallenverzeichnis.js && babel-node getCalendarData.js && babel-node getLeaderboardData.js",
 		"gymList": "babel-node getHallenverzeichnis.js",
 		"postversion": "sed '/^.*\"version\":.*$/d' package.json > .package.json.without.version && echo $npm_package_version > .version && git rev-parse HEAD > .githash",
 		"newSnapshot": "npm version preminor --preid=SNAPSHOT",

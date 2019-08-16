@@ -6,7 +6,7 @@ import md5 from 'md5';
 import FormData from 'form-data';
 import AdmZip from 'adm-zip';
 import csv from 'csvtojson';
-
+import { writeFileWithMD5 } from './tools';
 String.prototype.replaceAll = function(search, replacement) {
 	var target = this;
 	return target.split(search).join(replacement);
@@ -154,13 +154,15 @@ function writeData(name1, name2, data) {
 	writeTable(name, getTableCSV(data));
 	writeTable(name1 + '.small' + (name2 !== '' ? '.' : '') + name2, getTableForMobileCSV(data));
 
-	fs.writeFile(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
+	writeFileWithMD5(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
 		console.log(`${name}.json geschrieben`)
 	);
 }
 
 function writeTable(name, csvdata) {
-	fs.writeFile(`out/${name}.csv`, csvdata, 'utf8', () => console.log(`${name}.csv geschrieben`));
+	writeFileWithMD5(`out/${name}.csv`, csvdata, 'utf8', () =>
+		console.log(`${name}.csv geschrieben`)
+	);
 }
 
 function getTableCSV(games) {

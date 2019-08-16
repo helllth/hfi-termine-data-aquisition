@@ -7,6 +7,7 @@ import FormData from 'form-data';
 import AdmZip from 'adm-zip';
 import csv from 'csvtojson';
 import iconv from 'iconv-lite';
+import { writeFileWithMD5 } from './tools';
 
 String.prototype.replaceAll = function(search, replacement) {
 	var target = this;
@@ -21,7 +22,7 @@ getHallenlisten();
 //msg=210032
 
 // function writeTable(name, csvdata) {
-// 	fs.writeFile(`out/${name}.csv`, csvdata, 'utf8', () => console.log(`${name}.csv geschrieben`));
+// 	writeFileWithMD5(`out/${name}.csv`, csvdata, 'utf8', () => console.log(`${name}.csv geschrieben`));
 // }
 
 function pad(n) {
@@ -64,8 +65,11 @@ async function getHallenlisten() {
 	let txt = iconv.decode(new Buffer(arrayBuffer), 'iso-8859-15').toString();
 
 	const jsonObj = await csv({ noheader: false, delimiter: ';' }).fromString(txt);
-	fs.writeFile(`out/json/hallenverzeichnis.json`, JSON.stringify(jsonObj, null, 2), 'utf8', () =>
-		console.log(`out/json/hallenverzeichnis.json geschrieben`)
+	writeFileWithMD5(
+		`out/json/hallenverzeichnis.json`,
+		JSON.stringify(jsonObj, null, 2),
+		'utf8',
+		() => console.log(`out/json/hallenverzeichnis.json geschrieben`)
 	);
 	//	console.log('jsonObj', jsonObj);
 

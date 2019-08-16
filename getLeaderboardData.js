@@ -9,6 +9,7 @@ import csv from 'csvtojson';
 import cheerio from 'cheerio';
 import tabletojson from 'tabletojson';
 import { XmlEntities } from 'html-entities';
+import { writeFileWithMD5 } from './tools';
 
 String.prototype.replaceAll = function(search, replacement) {
 	var target = this;
@@ -186,7 +187,7 @@ Promise.all(promises).then((values) => {
 
 		console.log('+++++++++' + el.key + ' for team ' + team);
 
-		fs.writeFile(`out/raw/${team}.html`, el.html, 'utf8', () =>
+		writeFileWithMD5(`out/raw/${team}.html`, el.html, 'utf8', () =>
 			console.log(`raw/${team}.html geschrieben`)
 		);
 
@@ -204,7 +205,7 @@ Promise.all(promises).then((values) => {
 
 		if (el.scoretable !== '<table>null</table>') {
 			//Leaderboards erzeugen Html
-			fs.writeFile(`out/raw/leaderboard.${team}.html`, el.scoretable, 'utf8', () =>
+			writeFileWithMD5(`out/raw/leaderboard.${team}.html`, el.scoretable, 'utf8', () =>
 				console.log(`leaderboard.${team}.html geschrieben`)
 			);
 
@@ -240,13 +241,13 @@ Promise.all(promises).then((values) => {
 			}
 
 			if (true || teams[saison][team].league.length === 1) {
-				fs.writeFile(
+				writeFileWithMD5(
 					`out/json/current/leaderboards/${team}.json`,
 					JSON.stringify(leaderBoard, null, 2),
 					'utf8',
 					() => console.log(`leaderboard.${team}.json geschrieben`)
 				);
-				fs.writeFile(
+				writeFileWithMD5(
 					`out/json/${saison}/leaderboards/${team}.json`,
 					JSON.stringify(leaderBoard, null, 2),
 					'utf8',
@@ -255,13 +256,13 @@ Promise.all(promises).then((values) => {
 
 				//renderedHTML
 				let leaderBoardHtml = createLeaderBoardHtml(leaderBoard);
-				fs.writeFile(
+				writeFileWithMD5(
 					`out/html/current/leaderboards/${team}.html`,
 					leaderBoardHtml,
 					'utf8',
 					() => console.log(`leaderboard.${team}.html geschrieben`)
 				);
-				fs.writeFile(
+				writeFileWithMD5(
 					`out/html/${saison}/leaderboards/${team}.html`,
 					leaderBoardHtml,
 					'utf8',
@@ -275,8 +276,11 @@ Promise.all(promises).then((values) => {
 
 		if (el.gametable !== '<table>null</table>') {
 			// Spiellisten schreiben Html
-			fs.writeFile(`out/raw/games.and.results.table.${team}.html`, el.gametable, 'utf8', () =>
-				console.log(`/games.and.results.table.${team}.html geschrieben`)
+			writeFileWithMD5(
+				`out/raw/games.and.results.table.${team}.html`,
+				el.gametable,
+				'utf8',
+				() => console.log(`/games.and.results.table.${team}.html geschrieben`)
 			);
 
 			//Json
@@ -334,13 +338,13 @@ Promise.all(promises).then((values) => {
 				}
 			}
 
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/json/current/games.and.results/complete/${team}.json`,
 				JSON.stringify(gamesAndResults, null, 2),
 				'utf8',
 				() => console.log(`games.and.results.${team}.json geschrieben`)
 			);
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/json/${saison}/games.and.results/complete/${team}.json`,
 				JSON.stringify(gamesAndResults, null, 2),
 				'utf8',
@@ -353,13 +357,13 @@ Promise.all(promises).then((values) => {
 				gamesAndResultsWitCompletehHalle,
 				'Illtal'
 			);
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/html/current/games.and.results/hfi/${team}.html`,
 				gamesAndResultsHtml,
 				'utf8',
 				() => console.log(`games.and.results/hfi/${team}.html geschrieben`)
 			);
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/html/${saison}/games.and.results/hfi/${team}.html`,
 				gamesAndResultsHtml,
 				'utf8',
@@ -374,13 +378,13 @@ Promise.all(promises).then((values) => {
 					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 				);
 			}
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/json/current/games.and.results/hfi/${team}.json`,
 				JSON.stringify(filteredGamesAndResults, null, 2),
 				'utf8',
 				() => console.log(`hfi/games.and.results.${team}.json geschrieben`)
 			);
-			fs.writeFile(
+			writeFileWithMD5(
 				`out/json/${saison}/games.and.results/hfi/${team}.json`,
 				JSON.stringify(filteredGamesAndResults, null, 2),
 				'utf8',
