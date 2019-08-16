@@ -88,12 +88,12 @@ let leagues = {
 		'mJB-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=48566&all=1',
 		'mJD-BZL-M': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50206&all=1',
 		'mJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50201&all=1',
+		'wJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50426&all=1',
 		'mJE-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50216&all=1',
 		'gJF-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50446'
 	},
 	test: {
-		'mJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50201&all=1',
-		'mJD-BZL-M': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50206&all=1'
+		'wJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50426&all=1'
 	}
 };
 
@@ -130,14 +130,16 @@ let teams = {
 		hfi_b: {
 			league: [ 'mJB-SLL' ]
 		},
-		hfi_d: { league: [ 'mJD-BZL-O' ] },
-		hfi_d2: { league: [ 'mJD-BZL-M' ] },
+		hfi_d: { league: [ 'mJD-BZL-M' ] },
+		hfi_d2: { league: [ 'mJD-BZL-O' ] },
+		hfi_wd: { league: [ 'wJD-BZL-O' ] },
 		hfi_e: { league: [ 'mJE-BZL-O' ] },
 		hfi_f: { league: [ 'gJF-O' ] }
 	},
 	test: {
 		hfi_d: { league: [ 'mJD-BZL-O' ] },
-		hfi_d2: { league: [ 'mJD-BZL-M' ] }
+		hfi_d2: { league: [ 'mJD-BZL-M' ] },
+		hfi_wd: { league: [ 'wJD-BZL-O' ] }
 	}
 };
 
@@ -155,6 +157,7 @@ let leagueNames = {
 	'mJD-BZL-N': 'Bezirksliga männliche Jugend D Staffel Nord',
 	'mJD-BZL-M': 'Bezirksliga männliche Jugend D Staffel Mitte',
 	'mJD-BZL-O': 'Bezirksliga männliche Jugend D Staffel Ost',
+	'wJD-BZL-O': 'Bezirksliga weibliche Jugend D Staffel Ost',
 	'mJD-BZL-4': 'Bezirksliga männliche Jugend D Staffel 4',
 	'mJE-BZL-O': 'Bezirksliga männliche Jugend E Staffel Ost',
 	'mJE-BZL-1': 'Bezirksliga männliche Jugend E Staffel 1',
@@ -377,6 +380,11 @@ Promise.all(promises).then((values) => {
 				filteredGamesAndResults = gamesAndResults.filter(
 					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 				);
+				if (filteredGamesAndResults.length === 0) {
+					filteredGamesAndResults = gamesAndResults.filter(
+						(game) => game.heim.includes('JSG Dir') || game.gast.includes('JSG Dir')
+					);
+				}
 			}
 			writeFileWithMD5(
 				`out/json/current/games.and.results/hfi/${team}.json`,
@@ -431,6 +439,11 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 		filteredGamesAndResults = gamesAndResults.filter(
 			(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 		);
+		if (filteredGamesAndResults.length === 0) {
+			filteredGamesAndResults = gamesAndResults.filter(
+				(game) => game.heim.includes('JSG Dir') || game.gast.includes('JSG Dir')
+			);
+		}
 	}
 	let html = `<table>
 	<tr>
