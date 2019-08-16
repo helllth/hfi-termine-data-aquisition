@@ -161,6 +161,11 @@ let leagueNames = {
 	'gJF-O': 'gemischte Jugend F Staffel Ost'
 };
 
+let tagLookup = {
+	'2019_2020': '19.20',
+	'2018_2019': '18.19'
+};
+
 let reverseLL = {};
 //reverse leagueLookup erzeugen
 Object.keys(teams[saison]).forEach(function(k) {
@@ -453,7 +458,9 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 		}
 
 		html += `<tr>
-		<td align="left">${row.datum}</td>
+		<td align="left" ondblclick="window.alert('Tag zur Verlinkung der Berichte: ${tagLookup[
+			saison
+		]}.${row.nr}')">${row.datum}</td>
 		<td align="left">${halle}</td>
 		<td align="left">${row.heim.replace(
 			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
