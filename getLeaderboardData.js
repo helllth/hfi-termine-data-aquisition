@@ -15,127 +15,192 @@ String.prototype.replaceAll = function(search, replacement) {
 	return target.split(search).join(replacement);
 };
 
+//const saison = '2018_2019';
+const saison = '2019_2020';
+//const saison = 'test';
+
 fs.ensureDirSync('out/json/current/leaderboards/');
 fs.ensureDirSync('out/json/current/games.and.results/complete/');
 fs.ensureDirSync('out/json/current/games.and.results/hfi/');
 fs.ensureDirSync('out/html/current/leaderboards/');
 fs.ensureDirSync('out/html/current/games.and.results/hfi/');
-fs.ensureDirSync('out/raw');
 
-let today = new Date();
+fs.ensureDirSync(`out/json/${saison}/leaderboards/`);
+fs.ensureDirSync(`out/json/${saison}/games.and.results/complete/`);
+fs.ensureDirSync(`out/json/${saison}/games.and.results/hfi/`);
+fs.ensureDirSync(`out/html/${saison}/leaderboards/`);
+fs.ensureDirSync(`out/html/${saison}/games.and.results/hfi/`);
+fs.ensureDirSync(`out/raw`);
 
-if (today.getDay() === 0) {
-	today.setDate(today.getDate() - 1);
+//hallenverz
+
+let hallenverz = {};
+
+try {
+	hallenverz = fs.readJsonSync('./out/json/hallenverzeichnis.json');
+} catch (error) {
+	//skip
 }
-today.setHours(0);
-today.setMinutes(0);
 
-let nextSunday = endOfWeek(today);
-let lastMonday = new Date(
-	nextSunday.getFullYear(),
-	nextSunday.getMonth(),
-	nextSunday.getDate() - 6
-);
-let nextMonday = new Date(
-	nextSunday.getFullYear(),
-	nextSunday.getMonth(),
-	nextSunday.getDate() + 1
-);
-let nextButOneSunday = endOfWeek(nextSunday);
-let nextButOneMonday = new Date(
-	nextButOneSunday.getFullYear(),
-	nextButOneSunday.getMonth(),
-	nextButOneSunday.getDate() + 1
-);
-
-// console.log('today', today + ''); console.log('lastMonday', lastMonday + '');
-// console.log('nextSunday', nextSunday + ''); console.log('nextButOneSunday',
-// nextButOneSunday + '');
-
-const saison = '18/19';
-
-let seed = {
-	hfi1:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&nm=12&' +
-		'teamID=437815',
-	hfi2: 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=34939&teamID=440182',
-	hfi3:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&nm=12&' +
-		'teamID=440212',
-	hfi4:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&nm=12&' +
-		'teamID=458383',
-	a:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&nm=12&' +
-		'teamID=441694',
-	a2:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&nm=12&' +
-		'teamID=455953',
-	b:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&nm=12&' +
-		'teamID=456028',
-	d:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&nm=12&' +
-		'teamID=481123',
-	e:
-		'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&nm=12&' +
-		'teamID=481135',
-	f: 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670'
+const getHalle = (nummer) => {
+	const hit = hallenverz.find((element) => {
+		return element['#Nummer'] === nummer;
+	});
+	if (hit !== undefined) {
+		return hit;
+	} else {
+		return nummer;
+	}
 };
 
 let leagues = {
-	'M-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&all=1',
-	'M-VL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34939&all=1',
-	'M-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&all=1',
-	'M-BL-S': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&all=1',
-	'mJA-OLRPS': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&all=1',
-	'mJA-SLL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&all=1',
-	'mJB-BZL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&all=1',
-	'mJD-BZL-4': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&all=1',
-	'mJE-BZL-1': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&all=1',
-	'gJF-M': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670&all=1'
+	'2018_2019': {
+		'M-OLRPS':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&all=1',
+		'M-VL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34939&all=1',
+		'M-BZL-O':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&all=1',
+		'M-BL-S': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&all=1',
+		'mJA-OLRPS':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&all=1',
+		'mJA-SLL':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&all=1',
+		'mJB-BZL':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&all=1',
+		'mJD-BZL-N': 'https://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=36562&all=1',
+		'mJD-BZL-4':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&all=1',
+		'mJE-BZL-O': 'https://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=36565',
+		'mJE-BZL-1':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&all=1',
+		'gJF-M': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670&all=1'
+	},
+	'2019_2020': {
+		'M-OLRPS':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=79&score=44241&all=1',
+		'M-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47431&all=1',
+		'M-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47441&all=1',
+		'M-BL-N': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47851&all=1',
+		'mJA-OLRPS':
+			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=79&score=44486&all=1',
+		'mJA-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=48561&all=1',
+		'mJB-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=48566&all=1',
+		'mJD-BZL-M': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50206&all=1',
+		'mJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50201&all=1',
+		'mJE-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50216&all=1',
+		'gJF-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50446'
+	},
+	test: {
+		'mJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50201&all=1',
+		'mJD-BZL-M': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50206&all=1'
+	}
 };
 
 let teams = {
-	hfi1: {
-		league: 'M-OLRPS'
+	'2018_2019': {
+		hfi1: {
+			league: [ 'M-OLRPS' ]
+		},
+		hfi2: { league: [ 'M-VL' ] },
+		hfi3: { league: [ 'M-BZL-O' ] },
+		hfi4: {
+			league: [ 'M-BL-S' ]
+		},
+		hfi_a: { league: [ 'mJA-OLRPS' ] },
+		hfi_a2: { league: [ 'mJA-SLL' ] },
+		hfi_b: {
+			league: [ 'mJB-BZL' ]
+		},
+		hfi_d: { league: [ 'mJD-BZL-N', 'mJD-BZL-4' ] },
+		hfi_e: { league: [ 'mJE-BZL-O', 'mJE-BZL-1' ] },
+		hfi_f: { league: [ 'gJF-M' ] }
+	},
+	'2019_2020': {
+		hfi1: {
+			league: [ 'M-OLRPS' ]
+		},
+		hfi2: { league: [ 'M-SLL' ] },
+		hfi3: { league: [ 'M-BZL-O' ] },
+		hfi4: {
+			league: [ 'M-BL-N' ]
+		},
+		hfi_a: { league: [ 'mJA-OLRPS' ] },
+		hfi_a2: { league: [ 'mJA-SLL' ] },
+		hfi_b: {
+			league: [ 'mJB-SLL' ]
+		},
+		hfi_d: { league: [ 'mJD-BZL-O' ] },
+		hfi_d2: { league: [ 'mJD-BZL-M' ] },
+		hfi_e: { league: [ 'mJE-BZL-O' ] },
+		hfi_f: { league: [ 'gJF-O' ] }
+	},
+	test: {
+		hfi_d: { league: [ 'mJD-BZL-O' ] },
+		hfi_d2: { league: [ 'mJD-BZL-M' ] }
 	}
-	// hfi2: { league: 'M-VL' }, hfi3: { league: 'M-BZL-O' }, hfi4: { league:
-	// 'M-BL-S' }, a: { league: 'mJA-OLRPS' }, a2: { league: 'mJA-SLL' }, b: {
-	// league: 'mJB-BZL' }, d: { league: 'mJD-BZL-4' }, e: { league: 'mJE-BZL-1' },
-	// f: { league: 'gJF-M' }json
 };
+
+let leagueNames = {
+	'M-OLRPS': 'Männer Oberliga RPS',
+	'M-SLL': 'Saarlandliga Männer',
+	'M-VL': 'Verbandsliga Männer',
+	'M-BZL-O': 'Bezirksliga Ost Männer',
+	'M-BL-S': 'B Liga Süd Männer',
+	'M-BL-N': 'B Liga Nord Männer',
+	'mJA-OLRPS': 'männliche Jugend A Oberliga RPS',
+	'mJA-SLL': 'Saarlandliga männliche Jugend A',
+	'mJB-SLL': 'Saarlandliga männliche Jugend B',
+	'mJB-BZL': 'Bezirksliga männliche Jugend B',
+	'mJD-BZL-N': 'Bezirksliga männliche Jugend D Staffel Nord',
+	'mJD-BZL-M': 'Bezirksliga männliche Jugend D Staffel Mitte',
+	'mJD-BZL-O': 'Bezirksliga männliche Jugend D Staffel Ost',
+	'mJD-BZL-4': 'Bezirksliga männliche Jugend D Staffel 4',
+	'mJE-BZL-O': 'Bezirksliga männliche Jugend E Staffel Ost',
+	'mJE-BZL-1': 'Bezirksliga männliche Jugend E Staffel 1',
+	'gJF-M': 'gemischte Jugend F Staffel Mitte',
+	'gJF-O': 'gemischte Jugend F Staffel Ost'
+};
+
+let reverseLL = {};
+//reverse leagueLookup erzeugen
+Object.keys(teams[saison]).forEach(function(k) {
+	for (const league of teams[saison][k].league) {
+		reverseLL[league] = k;
+	}
+});
 
 let promises = [];
 
-Object.keys(leagues).forEach(function(k) {
-	promises.push(getHtmlForUrl(k, leagues[k]));
+Object.keys(leagues[saison]).forEach(function(k) {
+	promises.push(getHtmlForUrl(k, leagues[saison][k]));
 });
 
 Promise.all(promises).then((values) => {
 	for (const el of values) {
-		console.log('+++++++++' + el.key);
+		let team = reverseLL[el.key];
 
-		fs.writeFile(`out/raw/${el.key}.html`, el.html, 'utf8', () =>
-			console.log(`raw/${el.key}.html geschrieben`)
+		console.log('+++++++++' + el.key + ' for team ' + team);
+
+		fs.writeFile(`out/raw/${team}.html`, el.html, 'utf8', () =>
+			console.log(`raw/${team}.html geschrieben`)
 		);
 
 		const $ = cheerio.load(el.html);
 		try {
 			el.scoretable = '<table>' + $('.scoretable').html() + '</table>';
 		} catch (e) {
-			console.warn('Leaderboard für ' + el.key + ' nicht verfügbar.');
+			console.warn('Leaderboard für ' + team + ' nicht verfügbar.');
 		}
 		try {
 			el.gametable = '<table>' + $('.gametable').html() + '</table>';
 		} catch (e) {
-			console.warn('Games and results für ' + el.key + ' nicht verfügbar.');
+			console.warn('Games and results für ' + team + ' nicht verfügbar.');
 		}
 
 		if (el.scoretable !== '<table>null</table>') {
 			//Leaderboards erzeugen Html
-			fs.writeFile(`out/raw/leaderboard.${el.key}.html`, el.scoretable, 'utf8', () =>
-				console.log(`leaderboard.${el.key}.html geschrieben`)
+			fs.writeFile(`out/raw/leaderboard.${team}.html`, el.scoretable, 'utf8', () =>
+				console.log(`leaderboard.${team}.html geschrieben`)
 			);
 
 			//Json
@@ -153,7 +218,10 @@ Promise.all(promises).then((values) => {
 				} else {
 					leaderBoard.push({
 						platz: row['0'],
-						name: row['1'],
+						name: row['1'].replace(
+							'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
+							'JSG HF Illtal'
+						),
 						spiele: row['2'],
 						siege: row['3'],
 						unentschieden: row['4'],
@@ -166,30 +234,44 @@ Promise.all(promises).then((values) => {
 				}
 			}
 
-			fs.writeFile(
-				`out/json/current/leaderboards/${el.key}.json`,
-				JSON.stringify(leaderBoard, null, 2),
-				'utf8',
-				() => console.log(`leaderboard.${el.key}.json geschrieben`)
-			);
+			if (true || teams[saison][team].league.length === 1) {
+				fs.writeFile(
+					`out/json/current/leaderboards/${team}.json`,
+					JSON.stringify(leaderBoard, null, 2),
+					'utf8',
+					() => console.log(`leaderboard.${team}.json geschrieben`)
+				);
+				fs.writeFile(
+					`out/json/${saison}/leaderboards/${team}.json`,
+					JSON.stringify(leaderBoard, null, 2),
+					'utf8',
+					() => console.log(`leaderboard.${team}.json geschrieben`)
+				);
 
-			//renderedHTML
-			let leaderBoardHtml = createLeaderBoardHtml(leaderBoard);
-			fs.writeFile(
-				`out/html/current/leaderboards/${el.key}.html`,
-				leaderBoardHtml,
-				'utf8',
-				() => console.log(`leaderboards/${el.key}.html geschrieben`)
-			);
+				//renderedHTML
+				let leaderBoardHtml = createLeaderBoardHtml(leaderBoard);
+				fs.writeFile(
+					`out/html/current/leaderboards/${team}.html`,
+					leaderBoardHtml,
+					'utf8',
+					() => console.log(`leaderboard.${team}.html geschrieben`)
+				);
+				fs.writeFile(
+					`out/html/${saison}/leaderboards/${team}.html`,
+					leaderBoardHtml,
+					'utf8',
+					() => console.log(`leaderboard.${team}.html geschrieben`)
+				);
+			} else {
+				//TODO
+				//add here the code for teams with multiple leagues
+			}
 		}
 
 		if (el.gametable !== '<table>null</table>') {
 			// Spiellisten schreiben Html
-			fs.writeFile(
-				`out/raw/games.and.results.table.${el.key}.html`,
-				el.gametable,
-				'utf8',
-				() => console.log(`/games.and.results.table.${el.key}.html geschrieben`)
+			fs.writeFile(`out/raw/games.and.results.table.${team}.html`, el.gametable, 'utf8', () =>
+				console.log(`/games.and.results.table.${team}.html geschrieben`)
 			);
 
 			//Json
@@ -201,6 +283,8 @@ Promise.all(promises).then((values) => {
 
 			let first = true;
 			let gamesAndResults = [];
+			let gamesAndResultsWitCompletehHalle = [];
+
 			for (let row of gamesAndResultsRaw) {
 				if (first) {
 					first = false;
@@ -211,9 +295,32 @@ Promise.all(promises).then((values) => {
 					gamesAndResults.push({
 						nr: row['1'],
 						datum: row['2'],
-						halle: halleEL('a').text(),
-						heim: XmlEntities.decode(row['4']),
-						gast: XmlEntities.decode(row['6']),
+						hallen: halleEL('a').text(),
+						heim: XmlEntities.decode(row['4']).replace(
+							'SG Illt-Dud-Fb',
+							'JSG HF Illtal'
+						),
+						gast: XmlEntities.decode(row['6']).replace(
+							'SG Illt-Dud-Fb',
+							'JSG HF Illtal'
+						),
+						toreHeim: row['7'],
+						toreGast: row['9'],
+						linkPI: piEL('a').attr('href'),
+						zusatzInfo: piEL('a').attr('title')
+					});
+					gamesAndResultsWitCompletehHalle.push({
+						nr: row['1'],
+						datum: row['2'],
+						halle: getHalle(halleEL('a').text()),
+						heim: XmlEntities.decode(row['4']).replace(
+							'SG Illt-Dud-Fb',
+							'JSG HF Illtal'
+						),
+						gast: XmlEntities.decode(row['6']).replace(
+							'SG Illt-Dud-Fb',
+							'JSG HF Illtal'
+						),
 						toreHeim: row['7'],
 						toreGast: row['9'],
 						linkPI: piEL('a').attr('href'),
@@ -223,34 +330,56 @@ Promise.all(promises).then((values) => {
 			}
 
 			fs.writeFile(
-				`out/json/current/games.and.results/complete/${el.key}.json`,
+				`out/json/current/games.and.results/complete/${team}.json`,
 				JSON.stringify(gamesAndResults, null, 2),
 				'utf8',
-				() => console.log(`games.and.results.${el.key}.json geschrieben`)
+				() => console.log(`games.and.results.${team}.json geschrieben`)
+			);
+			fs.writeFile(
+				`out/json/${saison}/games.and.results/complete/${team}.json`,
+				JSON.stringify(gamesAndResults, null, 2),
+				'utf8',
+				() => console.log(`games.and.results.${team}.json geschrieben`)
 			);
 
-			//renderedHTML
-			let gamesAndResultsHtml = createGamesAndResultsHtml(gamesAndResults, 'HF Illtal');
+			//für HFI
+			//renderedHTML Spielplan
+			let gamesAndResultsHtml = createGamesAndResultsHtml(
+				gamesAndResultsWitCompletehHalle,
+				'Illtal'
+			);
 			fs.writeFile(
-				`out/html/current/games.and.results/hfi/${el.key}.html`,
+				`out/html/current/games.and.results/hfi/${team}.html`,
 				gamesAndResultsHtml,
 				'utf8',
-				() => console.log(`games.and.results/hfi/${el.key}.html geschrieben`)
+				() => console.log(`games.and.results/hfi/${team}.html geschrieben`)
+			);
+			fs.writeFile(
+				`out/html/${saison}/games.and.results/hfi/${team}.html`,
+				gamesAndResultsHtml,
+				'utf8',
+				() => console.log(`games.and.results/hfi/${team}.html geschrieben`)
 			);
 
 			// filtered JSON
 			let filteredGamesAndResults = gamesAndResults;
-			let filterTeam = 'HF Illtal';
+			let filterTeam = 'Illtal';
 			if (filterTeam) {
 				filteredGamesAndResults = gamesAndResults.filter(
 					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 				);
 			}
 			fs.writeFile(
-				`out/json/current/games.and.results/hfi/${el.key}.json`,
+				`out/json/current/games.and.results/hfi/${team}.json`,
 				JSON.stringify(filteredGamesAndResults, null, 2),
 				'utf8',
-				() => console.log(`hfi/games.and.results.${el.key}.json geschrieben`)
+				() => console.log(`hfi/games.and.results.${team}.json geschrieben`)
+			);
+			fs.writeFile(
+				`out/json/${saison}/games.and.results/hfi/${team}.json`,
+				JSON.stringify(filteredGamesAndResults, null, 2),
+				'utf8',
+				() => console.log(`hfi/games.and.results.${team}.json geschrieben`)
 			);
 		}
 	}
@@ -271,7 +400,10 @@ function createLeaderBoardHtml(leaderboard) {
 	for (let row of leaderboard) {
 		html += `<tr>
 		<td align="center">${row.platz}</td>
-		<td align="left">${row.name}</td>
+		<td align="left">${row.name.replace(
+			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
+			'JSG HF Illtal'
+		)}</td>
 		<td align="center">${row.spiele}</td>
 		<td align="center">${row.siege}</td>
 		<td align="center">${row.unentschieden}</td>
@@ -305,17 +437,44 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 	  <th align="center"colspan="3">Ergebnis</th>
 	  <th align="center">Spielbericht</th>
 	</tr>`;
+
 	for (let row of filteredGamesAndResults) {
+		let halle;
+		if (row.halle.Name !== undefined) {
+			let ort;
+			if (row.halle.Stadt === 'Eppelborn' || row.halle.Stadt === 'Illingen') {
+				ort = '';
+			} else {
+				ort = row.halle.Stadt + ', ';
+			}
+			halle = ort + row.halle.Name;
+		} else {
+			halle = row.halle;
+		}
+
 		html += `<tr>
 		<td align="left">${row.datum}</td>
-		<td align="left">${row.halle}</td>
-		<td align="left">${row.heim}</td>
+		<td align="left">${halle}</td>
+		<td align="left">${row.heim.replace(
+			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
+			'JSG HF Illtal'
+		)}</td>
 		<td align="center"></td>
-		<td align="left">${row.gast}</td>
+		<td align="left">${row.gast.replace(
+			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
+			'JSG HF Illtal'
+		)}</td>
 		<td align="center">${row.toreHeim}</td>
 		<td align="center">:</td>
-		<td align="center">${row.toreGast}</td>
-		<td align="center"><a target="_handball4all" href="${row.linkPI}">Spielbericht</a></td>
+		<td align="center">${row.toreGast}</td>`;
+
+		if (row.linkPI !== undefined) {
+			html += `<td align="center"><a target="_handball4all" href="${row.linkPI}">Spielbericht</a></td>`;
+		} else {
+			html += `<td align="center">-</td>`;
+		}
+
+		html += `
 	  </tr>`;
 	}
 	html += `</table>`;
@@ -324,66 +483,6 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 
 function pad(n) {
 	return n < 10 ? '0' + n : n;
-}
-
-function getHomeTeam(game) {
-	return getTeamName(game, game.Heim);
-}
-function getAwayTeam(game) {
-	return getTeamName(game, game.Gast);
-}
-function getTeamName(game, team) {
-	if (team.indexOf('Illtal') === -1) {
-		return addSpacesForSyllabification(team);
-	} else {
-		if (team.indexOf('MSG') !== -1) {
-			team = team.replace('MSG ', '');
-			return `<b>${team}</b>`;
-		} else {
-			team = team.replace('JSG ', '');
-			return `<b>${getJSGPrefix(game)} ${team}</b>`;
-		}
-	}
-}
-
-function addSpacesForSyllabification(_word) {
-	let word = _word;
-	const charsToEnhanceWithSpaces = [ '/', '-' ];
-	for (const eChar of charsToEnhanceWithSpaces) {
-		const parts = word.split(eChar);
-		const newParts = parts.map((x) => ' ' + x.trim() + ' ');
-		word = newParts.join(eChar);
-	}
-	return word;
-}
-function getJSGPrefix(game) {
-	return game.Staffel.substr(0, game.Staffel.indexOf('-'));
-}
-function getWeekday(date) {
-	switch (date.getDay()) {
-		case 0:
-			return 'Sonntag';
-		case 1:
-			return 'Montag';
-		case 2:
-			return 'Dienstag';
-		case 3:
-			return 'Mittwoch';
-		case 4:
-			return 'Donnerstag';
-		case 5:
-			return 'Freitag';
-		case 6:
-			return 'Samstag';
-
-		default:
-			break;
-	}
-}
-function endOfWeek(date) {
-	let d = new Date(date.valueOf());
-	var lastday = d.getDate() - (d.getDay() - 1) + 6;
-	return new Date(d.setDate(lastday));
 }
 
 async function getHtmlForUrl(key, url) {

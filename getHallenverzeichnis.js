@@ -64,8 +64,8 @@ async function getHallenlisten() {
 	let txt = iconv.decode(new Buffer(arrayBuffer), 'iso-8859-15').toString();
 
 	const jsonObj = await csv({ noheader: false, delimiter: ';' }).fromString(txt);
-	fs.writeFile(`out/json/hallenverzeichniss.json`, JSON.stringify(jsonObj, null, 2), 'utf8', () =>
-		console.log(`out/json/hallenverzeichniss.json geschrieben`)
+	fs.writeFile(`out/json/hallenverzeichnis.json`, JSON.stringify(jsonObj, null, 2), 'utf8', () =>
+		console.log(`out/json/hallenverzeichnis.json geschrieben`)
 	);
 	//	console.log('jsonObj', jsonObj);
 
