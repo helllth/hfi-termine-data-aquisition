@@ -300,7 +300,7 @@ Promise.all(promises).then((values) => {
 					gamesAndResults.push({
 						nr: row['1'],
 						datum: row['2'],
-						hallen: halleEL('a').text(),
+						halle: halleEL('a').text(),
 						heim: XmlEntities.decode(row['4']).replace(
 							'SG Illt-Dud-Fb',
 							'JSG HF Illtal'
@@ -396,9 +396,7 @@ function createLeaderBoardHtml(leaderboard) {
 	  <th align="left">Platz</th>
 	  <th align="left">Mannschaft</th>
 	  <th align="center">Spiele</th>
-	  <th align="center">S</th>
-	  <th align="center">U</th>
-	  <th align="center">N</th>
+	  <th align="center">S/U/N</th> 
 	  <th align="center"colspan="3">Tore</th>
 	  <th align="center" colspan="3">Punkte</th>
 	</tr>`;
@@ -410,9 +408,7 @@ function createLeaderBoardHtml(leaderboard) {
 			'JSG HF Illtal'
 		)}</td>
 		<td align="center">${row.spiele}</td>
-		<td align="center">${row.siege}</td>
-		<td align="center">${row.unentschieden}</td>
-		<td align="center">${row.niederlagen}</td>
+		<td align="center">${row.siege}/${row.unentschieden}/${row.niederlagen}</td>
 		<td align="center">${row.torePlus}</td>
 		<td align="center">:</td>
 		<td align="center">${row.toreMinus}</td>
@@ -446,9 +442,10 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 		let halle;
 		if (row.halle.Name !== undefined) {
 			let ort;
-			if (row.halle.Stadt === 'Eppelborn' || row.halle.Stadt === 'Illingen') {
-				ort = '';
-				halle = row.halle.Name;
+			if (row.halle.Stadt === 'Eppelborn') {
+				halle = 'Hellberghalle';
+			} else if (row.halle.Stadt === 'Illingen') {
+				halle = 'Uchtelfangen';
 			} else {
 				ort = row.halle.Stadt + ', ';
 				halle = `<a target="_maps" href="https://www.google.com/maps/search/${row.halle
@@ -473,8 +470,8 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
 			'JSG HF Illtal'
 		)}</td>
-		<td align="center">${row.toreHeim}25</td>
-		<td align="center">${row.toreGast}25</td>`;
+		<td align="center">${row.toreHeim}</td>
+		<td align="center">${row.toreGast}</td>`;
 
 		if (row.linkPI !== undefined) {
 			html += `<td align="center"><a target="_handball4all" href="${row.linkPI}">Spielbericht</a></td>`;

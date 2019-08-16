@@ -20,10 +20,8 @@ RUN locale-gen --purge
 WORKDIR /app
 
 # Install app dependencies
-COPY package.json .
-# For npm@5 or later, copy package-lock.json as well
-# COPY package.json package-lock.json .
-
+COPY yarn.lock ./
+COPY .package.json.without.version ./package.json
 RUN yarn install
 
 # Bundle app source
