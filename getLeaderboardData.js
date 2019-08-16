@@ -437,9 +437,8 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 	  <th align="left">Datum</th>
 	  <th align="left">Halle</th>
 	  <th align="left">Heim</th>
-	  <th align="center">:</th>
 	  <th align="left">Gast</th>
-	  <th align="center"colspan="3">Ergebnis</th>
+	  <th align="center"colspan="2">Ergebnis</th>
 	  <th align="center">Spielbericht</th>
 	</tr>`;
 
@@ -449,36 +448,38 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 			let ort;
 			if (row.halle.Stadt === 'Eppelborn' || row.halle.Stadt === 'Illingen') {
 				ort = '';
+				halle = row.halle.Name;
 			} else {
 				ort = row.halle.Stadt + ', ';
+				halle = `<a target="_maps" href="https://www.google.com/maps/search/${row.halle
+					.Plz} ${row.halle.Stadt}, ${row.halle.Name}, ${row.halle.Strasse ||
+					''}"><img title="${ort +
+					row.halle.Name}" src="https://hfi-data.cismet.de/icons/location.png"/></a>`;
 			}
-			halle = ort + row.halle.Name;
 		} else {
-			halle = row.halle;
+			halle = `<img title="Hallennummer: ${row.halle}" src="https://hfi-data.cismet.de/icons/location.png"/>`;
 		}
 
 		html += `<tr>
 		<td align="left" ondblclick="window.alert('Tag zur Verlinkung der Berichte: ${tagLookup[
 			saison
 		]}.${row.nr}')">${row.datum}</td>
-		<td align="left">${halle}</td>
+		<td align="center">${halle}</td>
 		<td align="left">${row.heim.replace(
 			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
 			'JSG HF Illtal'
 		)}</td>
-		<td align="center"></td>
 		<td align="left">${row.gast.replace(
 			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
 			'JSG HF Illtal'
 		)}</td>
-		<td align="center">${row.toreHeim}</td>
-		<td align="center">:</td>
-		<td align="center">${row.toreGast}</td>`;
+		<td align="center">${row.toreHeim}25</td>
+		<td align="center">${row.toreGast}25</td>`;
 
 		if (row.linkPI !== undefined) {
 			html += `<td align="center"><a target="_handball4all" href="${row.linkPI}">Spielbericht</a></td>`;
 		} else {
-			html += `<td align="center">-</td>`;
+			html += `<td align="center"></td>`;
 		}
 
 		html += `
