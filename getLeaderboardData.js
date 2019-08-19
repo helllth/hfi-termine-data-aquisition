@@ -16,11 +16,16 @@ String.prototype.replaceAll = function(search, replacement) {
 	return target.split(search).join(replacement);
 };
 
-//const saison = '2018_2019';
-const saison = '2019_2020';
+// read config
+let teams = fs.readJsonSync('in/teams.json');
+let tagLookup = fs.readJsonSync('in/tagLookup.json');
+let seasonConf = fs.readJsonSync('in/seasonConf.json');
+
+const saison = seasonConf.current;
 //const saison = 'test';
 
 fs.ensureDirSync('out/json/current/leaderboards/');
+fs.ensureDirSync('out/json/config');
 fs.ensureDirSync('out/json/current/games.and.results/complete/');
 fs.ensureDirSync('out/json/current/games.and.results/hfi/');
 fs.ensureDirSync('out/html/current/leaderboards/');
@@ -54,166 +59,52 @@ const getHalle = (nummer) => {
 	}
 };
 
-let leagues = {
-	'2018_2019': {
-		'M-OLRPS':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34630&all=1',
-		'M-VL': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34939&all=1',
-		'M-BZL-O':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34942&all=1',
-		'M-BL-S': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34984&all=1',
-		'mJA-OLRPS':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=34636&all=1',
-		'mJA-SLL':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36424&all=1',
-		'mJB-BZL':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36436&all=1',
-		'mJD-BZL-N': 'https://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=36562&all=1',
-		'mJD-BZL-4':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38980&all=1',
-		'mJE-BZL-O': 'https://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=36565',
-		'mJE-BZL-1':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=38983&all=1',
-		'gJF-M': 'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=80&score=36670&all=1'
-	},
-	'2019_2020': {
-		'M-OLRPS':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=79&score=44241&all=1',
-		'M-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47431&all=1',
-		'M-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47441&all=1',
-		'M-BL-N': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=47851&all=1',
-		'mJA-OLRPS':
-			'http://spo.handball4all.de/Spielbetrieb/index.php?orgGrpID=79&score=44486&all=1',
-		'mJA-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=48561&all=1',
-		'mJB-SLL': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=48566&all=1',
-		'mJD-BZL-M': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50206&all=1',
-		'mJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50201&all=1',
-		'wJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50426&all=1',
-		'mJE-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50216&all=1',
-		'gJF-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50446'
-	},
-	test: {
-		'wJD-BZL-O': 'http://spo.handball4all.de/Spielbetrieb/?orgGrpID=80&score=50426&all=1'
-	}
-};
-
-let teams = {
-	'2018_2019': {
-		hfi1: {
-			league: [ 'M-OLRPS' ]
-		},
-		hfi2: { league: [ 'M-VL' ] },
-		hfi3: { league: [ 'M-BZL-O' ] },
-		hfi4: {
-			league: [ 'M-BL-S' ]
-		},
-		hfi_a: { league: [ 'mJA-OLRPS' ] },
-		hfi_a2: { league: [ 'mJA-SLL' ] },
-		hfi_b: {
-			league: [ 'mJB-BZL' ]
-		},
-		hfi_d: { league: [ 'mJD-BZL-N', 'mJD-BZL-4' ] },
-		hfi_e: { league: [ 'mJE-BZL-O', 'mJE-BZL-1' ] },
-		hfi_f: { league: [ 'gJF-M' ] }
-	},
-	'2019_2020': {
-		hfi1: {
-			league: [ 'M-OLRPS' ]
-		},
-		hfi2: { league: [ 'M-SLL' ] },
-		hfi3: { league: [ 'M-BZL-O' ] },
-		hfi4: {
-			league: [ 'M-BL-N' ]
-		},
-		hfi_a: { league: [ 'mJA-OLRPS' ] },
-		hfi_a2: { league: [ 'mJA-SLL' ] },
-		hfi_b: {
-			league: [ 'mJB-SLL' ]
-		},
-		hfi_d: { league: [ 'mJD-BZL-M' ] },
-		hfi_d2: { league: [ 'mJD-BZL-O' ] },
-		hfi_wd: { league: [ 'wJD-BZL-O' ] },
-		hfi_e: { league: [ 'mJE-BZL-O' ] },
-		hfi_f: { league: [ 'gJF-O' ] }
-	},
-	test: {
-		hfi_d: { league: [ 'mJD-BZL-O' ] },
-		hfi_d2: { league: [ 'mJD-BZL-M' ] },
-		hfi_wd: { league: [ 'wJD-BZL-O' ] }
-	}
-};
-
-let leagueNames = {
-	'M-OLRPS': 'Männer Oberliga RPS',
-	'M-SLL': 'Saarlandliga Männer',
-	'M-VL': 'Verbandsliga Männer',
-	'M-BZL-O': 'Bezirksliga Ost Männer',
-	'M-BL-S': 'B Liga Süd Männer',
-	'M-BL-N': 'B Liga Nord Männer',
-	'mJA-OLRPS': 'männliche Jugend A Oberliga RPS',
-	'mJA-SLL': 'Saarlandliga männliche Jugend A',
-	'mJB-SLL': 'Saarlandliga männliche Jugend B',
-	'mJB-BZL': 'Bezirksliga männliche Jugend B',
-	'mJD-BZL-N': 'Bezirksliga männliche Jugend D Staffel Nord',
-	'mJD-BZL-M': 'Bezirksliga männliche Jugend D Staffel Mitte',
-	'mJD-BZL-O': 'Bezirksliga männliche Jugend D Staffel Ost',
-	'wJD-BZL-O': 'Bezirksliga weibliche Jugend D Staffel Ost',
-	'mJD-BZL-4': 'Bezirksliga männliche Jugend D Staffel 4',
-	'mJE-BZL-O': 'Bezirksliga männliche Jugend E Staffel Ost',
-	'mJE-BZL-1': 'Bezirksliga männliche Jugend E Staffel 1',
-	'gJF-M': 'gemischte Jugend F Staffel Mitte',
-	'gJF-O': 'gemischte Jugend F Staffel Ost'
-};
-
-let tagLookup = {
-	'2019_2020': '19.20',
-	'2018_2019': '18.19'
-};
-
-let reverseLL = {};
-//reverse leagueLookup erzeugen
-Object.keys(teams[saison]).forEach(function(k) {
-	for (const league of teams[saison][k].league) {
-		reverseLL[league] = k;
-	}
-});
+writeFileWithMD5(`out/json/config/teams.json`, JSON.stringify(teams, null, 2));
+writeFileWithMD5(`out/json/config/tagLookup.json`, JSON.stringify(tagLookup, null, 2));
+writeFileWithMD5(`out/json/config/seasonConf.json`, JSON.stringify(seasonConf, null, 2));
 
 let promises = [];
 
-Object.keys(leagues[saison]).forEach(function(k) {
-	promises.push(getHtmlForUrl(k, leagues[saison][k]));
+console.log('do it for season', saison);
+
+Object.keys(teams[saison]).forEach(function(category) {
+	Object.keys(teams[saison][category].teams).forEach(function(teamKey) {
+		const team = teams[saison][category].teams[teamKey];
+		team.key = teamKey;
+		// team.season = saison;
+		// team.category = teams[saison][category].name;
+		promises.push(getHtmlForUrl(team));
+	});
 });
 
+writeFileWithMD5(`out/json/config/teams.json`, JSON.stringify(teams, null, 2));
+
 Promise.all(promises).then((values) => {
-	for (const el of values) {
-		let team = reverseLL[el.key];
+	for (const teamAndHtml of values) {
+		let team = teamAndHtml.team;
 
-		console.log('+++++++++' + el.key + ' for team ' + team);
+		console.log('+++++++++' + team.leaguename + ' for team ' + team.name);
 
-		writeFileWithMD5(`out/raw/${team}.html`, el.html, 'utf8', () =>
-			console.log(`raw/${team}.html geschrieben`)
-		);
+		writeFileWithMD5(`out/raw/${team.key}.html`, teamAndHtml.html);
 
-		const $ = cheerio.load(el.html);
+		const $ = cheerio.load(teamAndHtml.html);
 		try {
-			el.scoretable = '<table>' + $('.scoretable').html() + '</table>';
+			teamAndHtml.scoretable = '<table>' + $('.scoretable').html() + '</table>';
 		} catch (e) {
 			console.warn('Leaderboard für ' + team + ' nicht verfügbar.');
 		}
 		try {
-			el.gametable = '<table>' + $('.gametable').html() + '</table>';
+			teamAndHtml.gametable = '<table>' + $('.gametable').html() + '</table>';
 		} catch (e) {
 			console.warn('Games and results für ' + team + ' nicht verfügbar.');
 		}
 
-		if (el.scoretable !== '<table>null</table>') {
+		if (teamAndHtml.scoretable !== '<table>null</table>') {
 			//Leaderboards erzeugen Html
-			writeFileWithMD5(`out/raw/leaderboard.${team}.html`, el.scoretable, 'utf8', () =>
-				console.log(`leaderboard.${team}.html geschrieben`)
-			);
+			writeFileWithMD5(`out/raw/leaderboard.${team.key}.html`, teamAndHtml.scoretable);
 
 			//Json
-			const leaderboardRaw = tabletojson.convert(el.scoretable, {
+			const leaderboardRaw = tabletojson.convert(teamAndHtml.scoretable, {
 				useFirstRowForHeadings: true,
 				stripHtmlFromCells: true,
 				forceIndexAsNumber: true
@@ -228,8 +119,8 @@ Promise.all(promises).then((values) => {
 					leaderBoard.push({
 						platz: row['0'],
 						name: row['1'].replace(
-							'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
-							'JSG HF Illtal'
+							team.leaderboardNameReplacementFrom || '',
+							team.leaderboardNameReplacementTo || ''
 						),
 						spiele: row['2'],
 						siege: row['3'],
@@ -245,31 +136,20 @@ Promise.all(promises).then((values) => {
 
 			if (true || teams[saison][team].league.length === 1) {
 				writeFileWithMD5(
-					`out/json/current/leaderboards/${team}.json`,
-					JSON.stringify(leaderBoard, null, 2),
-					'utf8',
-					() => console.log(`leaderboard.${team}.json geschrieben`)
+					`out/json/current/leaderboards/${team.key}.json`,
+					JSON.stringify(leaderBoard, null, 2)
 				);
 				writeFileWithMD5(
-					`out/json/${saison}/leaderboards/${team}.json`,
-					JSON.stringify(leaderBoard, null, 2),
-					'utf8',
-					() => console.log(`leaderboard.${team}.json geschrieben`)
+					`out/json/${saison}/leaderboards/${team.key}.json`,
+					JSON.stringify(leaderBoard, null, 2)
 				);
 
 				//renderedHTML
 				let leaderBoardHtml = createLeaderBoardHtml(leaderBoard);
+				writeFileWithMD5(`out/html/current/leaderboards/${team.key}.html`, leaderBoardHtml);
 				writeFileWithMD5(
-					`out/html/current/leaderboards/${team}.html`,
-					leaderBoardHtml,
-					'utf8',
-					() => console.log(`leaderboard.${team}.html geschrieben`)
-				);
-				writeFileWithMD5(
-					`out/html/${saison}/leaderboards/${team}.html`,
-					leaderBoardHtml,
-					'utf8',
-					() => console.log(`leaderboard.${team}.html geschrieben`)
+					`out/html/${saison}/leaderboards/${team.key}.html`,
+					leaderBoardHtml
 				);
 			} else {
 				//TODO
@@ -277,17 +157,15 @@ Promise.all(promises).then((values) => {
 			}
 		}
 
-		if (el.gametable !== '<table>null</table>') {
+		if (teamAndHtml.gametable !== '<table>null</table>') {
 			// Spiellisten schreiben Html
 			writeFileWithMD5(
-				`out/raw/games.and.results.table.${team}.html`,
-				el.gametable,
-				'utf8',
-				() => console.log(`/games.and.results.table.${team}.html geschrieben`)
+				`out/raw/games.and.results.table.${team.key}.html`,
+				teamAndHtml.gametable
 			);
 
 			//Json
-			const gamesAndResultsRaw = tabletojson.convert(el.gametable, {
+			const gamesAndResultsRaw = tabletojson.convert(teamAndHtml.gametable, {
 				useFirstRowForHeadings: true,
 				stripHtmlFromCells: false,
 				forceIndexAsNumber: true
@@ -309,12 +187,12 @@ Promise.all(promises).then((values) => {
 						datum: row['2'],
 						halle: halleEL('a').text(),
 						heim: XmlEntities.decode(row['4']).replace(
-							'SG Illt-Dud-Fb',
-							'JSG HF Illtal'
+							team.gamesNameReplacementFrom || '',
+							team.gamesNameReplacementTo || ''
 						),
 						gast: XmlEntities.decode(row['6']).replace(
-							'SG Illt-Dud-Fb',
-							'JSG HF Illtal'
+							team.gamesNameReplacementFrom || '',
+							team.gamesNameReplacementTo || ''
 						),
 						toreHeim: row['7'],
 						toreGast: row['9'],
@@ -326,12 +204,12 @@ Promise.all(promises).then((values) => {
 						datum: row['2'],
 						halle: getHalle(halleEL('a').text()),
 						heim: XmlEntities.decode(row['4']).replace(
-							'SG Illt-Dud-Fb',
-							'JSG HF Illtal'
+							team.gamesNameReplacementFrom || '',
+							team.gamesNameReplacementTo || ''
 						),
 						gast: XmlEntities.decode(row['6']).replace(
-							'SG Illt-Dud-Fb',
-							'JSG HF Illtal'
+							team.gamesNameReplacementFrom || '',
+							team.gamesNameReplacementTo || ''
 						),
 						toreHeim: row['7'],
 						toreGast: row['9'],
@@ -342,67 +220,50 @@ Promise.all(promises).then((values) => {
 			}
 
 			writeFileWithMD5(
-				`out/json/current/games.and.results/complete/${team}.json`,
-				JSON.stringify(gamesAndResults, null, 2),
-				'utf8',
-				() => console.log(`games.and.results.${team}.json geschrieben`)
+				`out/json/current/games.and.results/complete/${team.key}.json`,
+				JSON.stringify(gamesAndResults, null, 2)
 			);
 			writeFileWithMD5(
-				`out/json/${saison}/games.and.results/complete/${team}.json`,
-				JSON.stringify(gamesAndResults, null, 2),
-				'utf8',
-				() => console.log(`games.and.results.${team}.json geschrieben`)
+				`out/json/${saison}/games.and.results/complete/${team.key}.json`,
+				JSON.stringify(gamesAndResults, null, 2)
 			);
 
 			//für HFI
 			//renderedHTML Spielplan
 			let gamesAndResultsHtml = createGamesAndResultsHtml(
 				gamesAndResultsWitCompletehHalle,
-				'Illtal'
+				team.filter || 'Illtal'
 			);
 			writeFileWithMD5(
-				`out/html/current/games.and.results/hfi/${team}.html`,
-				gamesAndResultsHtml,
-				'utf8',
-				() => console.log(`games.and.results/hfi/${team}.html geschrieben`)
+				`out/html/current/games.and.results/hfi/${team.key}.html`,
+				gamesAndResultsHtml
 			);
 			writeFileWithMD5(
-				`out/html/${saison}/games.and.results/hfi/${team}.html`,
-				gamesAndResultsHtml,
-				'utf8',
-				() => console.log(`games.and.results/hfi/${team}.html geschrieben`)
+				`out/html/${saison}/games.and.results/hfi/${team.key}.html`,
+				gamesAndResultsHtml
 			);
 
 			// filtered JSON
 			let filteredGamesAndResults = gamesAndResults;
-			let filterTeam = 'Illtal';
+			let filterTeam = team.filter || 'Illtal';
 			if (filterTeam) {
 				filteredGamesAndResults = gamesAndResults.filter(
 					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 				);
-				if (filteredGamesAndResults.length === 0) {
-					filteredGamesAndResults = gamesAndResults.filter(
-						(game) => game.heim.includes('JSG Dir') || game.gast.includes('JSG Dir')
-					);
-				}
 			}
 			writeFileWithMD5(
-				`out/json/current/games.and.results/hfi/${team}.json`,
-				JSON.stringify(filteredGamesAndResults, null, 2),
-				'utf8',
-				() => console.log(`hfi/games.and.results.${team}.json geschrieben`)
+				`out/json/current/games.and.results/hfi/${team.key}.json`,
+				JSON.stringify(filteredGamesAndResults, null, 2)
 			);
 			writeFileWithMD5(
-				`out/json/${saison}/games.and.results/hfi/${team}.json`,
-				JSON.stringify(filteredGamesAndResults, null, 2),
-				'utf8',
-				() => console.log(`hfi/games.and.results.${team}.json geschrieben`)
+				`out/json/${saison}/games.and.results/hfi/${team.key}.json`,
+				JSON.stringify(filteredGamesAndResults, null, 2)
 			);
 		}
 	}
 });
 
-function createLeaderBoardHtml(leaderboard) {
+function createLeaderBoardHtml(leaderboard, nameReplacement = { from: '', to: '' }) {
 	let html = `<table>
 	<tr>
 	  <th align="left">Platz</th>
@@ -415,10 +276,7 @@ function createLeaderBoardHtml(leaderboard) {
 	for (let row of leaderboard) {
 		html += `<tr>
 		<td align="center">${row.platz}</td>
-		<td align="left">${row.name.replace(
-			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
-			'JSG HF Illtal'
-		)}</td>
+		<td align="left">${row.name}</td>
 		<td align="center">${row.spiele}</td>
 		<td align="center">${row.siege}/${row.unentschieden}/${row.niederlagen}</td>
 		<td align="center">${row.torePlus}</td>
@@ -439,11 +297,11 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 		filteredGamesAndResults = gamesAndResults.filter(
 			(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 		);
-		if (filteredGamesAndResults.length === 0) {
-			filteredGamesAndResults = gamesAndResults.filter(
-				(game) => game.heim.includes('JSG Dir') || game.gast.includes('JSG Dir')
-			);
-		}
+		// if (filteredGamesAndResults.length === 0) {
+		// 	filteredGamesAndResults = gamesAndResults.filter(
+		// 		(game) => game.heim.includes('JSG Dir') || game.gast.includes('JSG Dir')
+		// 	);
+		// }
 	}
 	let html = `<table>
 	<tr>
@@ -479,14 +337,8 @@ function createGamesAndResultsHtml(gamesAndResults, filterTeam) {
 			saison
 		]}.${row.nr}')">${row.datum}</td>
 		<td align="center">${halle}</td>
-		<td align="left">${row.heim.replace(
-			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
-			'JSG HF Illtal'
-		)}</td>
-		<td align="left">${row.gast.replace(
-			'SG JSG HF Illtal - HSG Dudweiler-Fischbach',
-			'JSG HF Illtal'
-		)}</td>
+		<td align="left">${row.heim}</td>
+		<td align="left">${row.gast}</td>
 		<td align="center">${row.toreHeim}</td>
 		<td align="center">${row.toreGast}</td>`;
 
@@ -507,8 +359,8 @@ function pad(n) {
 	return n < 10 ? '0' + n : n;
 }
 
-async function getHtmlForUrl(key, url) {
-	const response = await fetch(url, {
+async function getHtmlForUrl(team) {
+	const response = await fetch(team.league, {
 		method: 'get',
 		headers: {
 			'User-Agent':
@@ -519,5 +371,5 @@ async function getHtmlForUrl(key, url) {
 
 	const html = await response.text();
 
-	return { key: key, html };
+	return { team: team, html };
 }
