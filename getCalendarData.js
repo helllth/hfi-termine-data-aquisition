@@ -154,14 +154,15 @@ function writeData(name1, name2, data) {
 	writeTable(name, getTableCSV(data));
 	writeTable(name1 + '.small' + (name2 !== '' ? '.' : '') + name2, getTableForMobileCSV(data));
 	const noFormating = true;
-	for (const game of data) {
+	const _data = JSON.parse(JSON.stringify(data));
+	for (const game of _data) {
 		// console.log('game', game);
 
 		game.Heim = getHomeTeam(game, noFormating);
 		game.Gast = getAwayTeam(game, noFormating);
 	}
 
-	writeFileWithMD5(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
+	writeFileWithMD5(`out/json/${name}.json`, JSON.stringify(_data, null, 2), 'utf8', () =>
 		console.log(`${name}.json geschrieben`)
 	);
 }
