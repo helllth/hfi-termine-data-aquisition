@@ -153,6 +153,13 @@ function writeData(name1, name2, data) {
 	const name = name1 + (name2 !== '' ? '.' : '') + name2;
 	writeTable(name, getTableCSV(data));
 	writeTable(name1 + '.small' + (name2 !== '' ? '.' : '') + name2, getTableForMobileCSV(data));
+	const noFormating = true;
+	for (const game of data) {
+		// console.log('game', game);
+
+		game.Heim = getHomeTeam(game, noFormating);
+		game.Gast = getAwayTeam(game, noFormating);
+	}
 
 	writeFileWithMD5(`out/json/${name}.json`, JSON.stringify(data, null, 2), 'utf8', () =>
 		console.log(`${name}.json geschrieben`)
@@ -275,26 +282,34 @@ function pad(n) {
 	return n < 10 ? '0' + n : n;
 }
 
-function getHomeTeam(game) {
-	return getTeamName(game, game.Heim);
+function getHomeTeam(game, noFormating = false) {
+	return getTeamName(game, game.Heim, noFormating);
 }
-function getAwayTeam(game) {
-	return getTeamName(game, game.Gast);
+function getAwayTeam(game, noFormating = false) {
+	return getTeamName(game, game.Gast, noFormating);
 }
-function getTeamName(game, team) {
+function getTeamName(game, team, noFormating = false) {
 	team = team.replace('SG JSG HF Illtal - HSG Dudweiler-Fischbach', 'JSG HF Illtal');
-	//team = team.replace('JSG Dirmingen-Schaumberg', 'JSG HF Illtal (JSG Dirmingen-Schaumberg)');
+	team = team.replace('JSG Dirmingen-Schaumberg', 'JSG Dirm.-Schaumb.');
+
+	let boldStart = '<b>';
+
+	let boldEnd = '</b>';
+	if (noFormating === true) {
+		boldStart = '';
+		boldEnd = '';
+	}
 
 	if (team.indexOf('Illtal') !== -1) {
 		if (team.indexOf('MSG') !== -1) {
 			team = team.replace('MSG ', '');
-			return `<b>${team}</b>`;
+			return `${boldStart}${team}${boldEnd}`;
 		} else {
 			team = team.replace('JSG ', '');
-			return `<b>${getJSGPrefix(game)} ${team}</b>`;
+			return `${boldStart}${getJSGPrefix(game)} ${team}${boldEnd}`;
 		}
 	} else if (team.indexOf('Dirmingen') !== -1) {
-		return `<b>${getJSGPrefix(game)} ${team}</b>`;
+		return `${boldStart}${getJSGPrefix(game)} ${team}${boldEnd}`;
 	} else {
 		return addSpacesForSyllabification(team);
 	}
