@@ -309,7 +309,7 @@ function getTeamName(game, team, noFormating = false) {
 			team = team.replace('JSG ', '');
 			return `${boldStart}${getJSGPrefix(game)} ${team}${boldEnd}`;
 		}
-	} else if (team.indexOf('Dirmingen') !== -1) {
+	} else if (team.indexOf('Dirm') !== -1) {
 		return `${boldStart}${getJSGPrefix(game)} ${team}${boldEnd}`;
 	} else {
 		return addSpacesForSyllabification(team);
