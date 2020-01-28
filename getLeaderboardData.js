@@ -68,6 +68,7 @@ let promises = [];
 console.log('do it for season', saison);
 
 Object.keys(teams[saison]).forEach(function(category) {
+	console.log('do it for category', category);
 	Object.keys(teams[saison][category].teams).forEach(function(teamKey) {
 		const team = teams[saison][category].teams[teamKey];
 		team.key = teamKey;
@@ -88,10 +89,12 @@ Promise.all(promises).then((values) => {
 		writeFileWithMD5(`out/raw/${team.key}.html`, teamAndHtml.html);
 
 		const $ = cheerio.load(teamAndHtml.html);
-		try {
-			teamAndHtml.scoretable = '<table>' + $('.scoretable').html() + '</table>';
-		} catch (e) {
-			console.warn('Leaderboard für ' + team + ' nicht verfügbar.');
+		if (team.noLeaderboard !== true) {
+			try {
+				teamAndHtml.scoretable = '<table>' + $('.scoretable').html() + '</table>';
+			} catch (e) {
+				console.warn('Leaderboard für ' + team + ' nicht verfügbar.');
+			}
 		}
 		try {
 			teamAndHtml.gametable = '<table>' + $('.gametable').html() + '</table>';
@@ -99,7 +102,7 @@ Promise.all(promises).then((values) => {
 			console.warn('Games and results für ' + team + ' nicht verfügbar.');
 		}
 
-		if (teamAndHtml.scoretable !== '<table>null</table>') {
+		if (teamAndHtml.scoretable !== '<table>null</table>' && team.noLeaderboard !== true) {
 			//Leaderboards erzeugen Html
 			writeFileWithMD5(`out/raw/leaderboard.${team.key}.html`, teamAndHtml.scoretable);
 
@@ -176,7 +179,7 @@ Promise.all(promises).then((values) => {
 			let gamesAndResultsWitCompletehHalle = [];
 
 			for (let row of gamesAndResultsRaw) {
-				if (first) {
+				if (first || row['0'] === 'Staffel') {
 					first = false;
 				} else {
 					const halleEL = cheerio.load(row['3']);

@@ -359,7 +359,7 @@ function endOfWeek(date) {
 async function getGamesForTeam(teamId, csvHeader = undefined) {
 	console.log('getData for teamId:', teamId);
 
-	const url = 'http://spo.handball4all.de/Spielbetrieb/mannschaftsspielplaene.php';
+	const url = 'https://spo.handball4all.de/Spielbetrieb/mannschaftsspielplaene.php';
 	let fd = new FormData();
 	// 'm=16' -F 'nm=0' -F 'clubno=210032' -F 'lgym=1' -F 'own=1' -F 'onefile=1' -F
 	// 'hvwsubmit=dw'
