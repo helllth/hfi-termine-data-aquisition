@@ -51,11 +51,13 @@ let msg = getGamesForTeam(
 let jsg = getGamesForTeam(210047);
 // // let sg_jsg_dw = getGamesForTeam(219522);
 let jsg_ds = getGamesForTeam(210009);
+let sg_illschaum = getGamesForTeam(219552);
 
 const promises = [];
 promises.push(msg);
 promises.push(jsg);
 promises.push(jsg_ds);
+promises.push(sg_illschaum);
 
 Promise.all(promises).then((values) => {
   //console.log('manualDates', manualDates);
