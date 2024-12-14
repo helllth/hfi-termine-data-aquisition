@@ -120,7 +120,7 @@ function fixBrokenLines(rawCSV) {
 		// Assuming a valid line has 14 columns
 		if (numFields < 14) {
 			// Incomplete line, append to buffer with a \\n
-			buffer += (buffer ? ' -- ' : '') + line.trim();
+			buffer += (buffer ? '\\n' : '') + line.trim();
 		} else {
 			// Complete line
 			if (buffer) {
