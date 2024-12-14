@@ -9,7 +9,7 @@ import csv from 'csvtojson';
 import iconv from 'iconv-lite';
 import { writeFileWithMD5 } from './tools';
 
-String.prototype.replaceAll = function(search, replacement) {
+String.prototype.replaceAll = function (search, replacement) {
 	var target = this;
 	return target.split(search).join(replacement);
 };
@@ -31,7 +31,7 @@ function pad(n) {
 
 function addSpacesForSyllabification(_word) {
 	let word = _word;
-	const charsToEnhanceWithSpaces = [ '/', '-' ];
+	const charsToEnhanceWithSpaces = ['/', '-'];
 	for (const eChar of charsToEnhanceWithSpaces) {
 		const parts = word.split(eChar);
 		const newParts = parts.map((x) => ' ' + x.trim() + ' ');
@@ -62,9 +62,23 @@ async function getHallenlisten() {
 		body: fd
 	});
 	let arrayBuffer = await response.arrayBuffer();
-	let txt = iconv.decode(new Buffer(arrayBuffer), 'iso-8859-15').toString();
+	let rawCSV = iconv.decode(Buffer.from(arrayBuffer), 'iso-8859-15').toString();
 
+	// Apply fix to handle broken lines
+	let txt = fixBrokenLines(rawCSV);
+
+	// Convert cleaned CSV to JSON
 	const jsonObj = await csv({ noheader: false, delimiter: ';' }).fromString(txt);
+
+	// Save the cleaned raw CSV
+	writeFileWithMD5(
+		`out/raw/hallenverzeichnis.csv`,
+		txt,
+		'utf8',
+		() => console.log(`out/raw/hallenverzeichnis.csv geschrieben`)
+	);
+
+	// Save the JSON output
 	writeFileWithMD5(
 		`out/json/hallenverzeichnis.json`,
 		JSON.stringify(jsonObj, null, 2),
@@ -94,4 +108,34 @@ async function getHallenlisten() {
 	// 	}
 	// 	return jsonObj;
 	// }
+}
+function fixBrokenLines(rawCSV) {
+	const lines = rawCSV.split(/\r?\n/); // Split the raw CSV into individual lines
+	const fixedLines = [];
+	let buffer = ''; // Buffer to hold incomplete rows
+
+	for (const line of lines) {
+		const numFields = line.split(';').length;
+
+		// Assuming a valid line has 14 columns
+		if (numFields < 14) {
+			// Incomplete line, append to buffer with a \\n
+			buffer += (buffer ? ' -- ' : '') + line.trim();
+		} else {
+			// Complete line
+			if (buffer) {
+				// Add buffered line to fixedLines
+				fixedLines.push(buffer);
+				buffer = ''; // Clear the buffer
+			}
+			fixedLines.push(line); // Add the current complete line
+		}
+	}
+
+	// Add any remaining buffer to fixedLines
+	if (buffer) {
+		fixedLines.push(buffer);
+	}
+
+	return fixedLines.join('\n'); // Reconstruct the cleaned CSV
 }

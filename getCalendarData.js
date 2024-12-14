@@ -19,6 +19,8 @@ fs.ensureDirSync('out/json');
 
 let manualDates = JSON.parse(fs.readFileSync('in/manual.json'));
 let cancelledGames = JSON.parse(fs.readFileSync('in/cancelled.json'));
+let seasonConf = fs.readJsonSync('in/seasonConf.json');
+
 let today = new Date();
 console.log('today.getDay', today.getDay());
 
@@ -118,16 +120,37 @@ Promise.all(promises).then((values) => {
 
   const teams = [
     ['HF Illtal'],
-    ['HF Illtal 2'],
-    ['HF Illtal 3'],
-    ['mJA HF Illtal'],
-    ['mJC HF Illtal', 'mJC HF Illtal 2'],
-    ['mJD HF Illtal'],
-    ['mJE HF Illtal', 'mJE HF Illtal 2'],
-    ['gJF HF Illtal'],
+    // ['HF Illtal 2'],
+    // ['HF Illtal 3'],
+    // ['FSG Illtal/Schaumberg 1'],
+    // ['FSG Illtal/Schaumberg 2'],
+    // ['mJB HF Illtal'],
+    // ['mJC HF Illtal', 'mJC HF Illtal 2'],
+    // ['mJD HF Illtal'],
+    // ['mJE HF Illtal', 'mJE HF Illtal 2'],
+    // ['gJF HF Illtal'],
   ];
+
+  console.log('teams', teams);
+  console.log('seasonConf', all);
+  const saison = seasonConf.current;
+
+  const test = [];
+  for (const game of all) {
+    if (getHomeTeam(game).toLowerCase().includes('ill')) {
+      test.push(getHomeTeam(game));
+    } else if (getAwayTeam(game).toLowerCase().includes('ill')) {
+      test.push(getAwayTeam(game));
+    }
+  }
+
+  const uniquetest = [...new Set(test)];
+  console.log('uniquitest', uniquetest);
+  return;
+
   for (const teamArr of teams) {
     const team = teamArr[0];
+
     if (teamArr.length === 1) {
       const openGamesForTeam = all.filter((game) => {
         const testtime = Date.parse(game.tsNoLocale);

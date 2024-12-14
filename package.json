@@ -31,8 +31,8 @@
 		"babel-preset-es2015": "^6.24.1"
 	},
 	"scripts": {
-		"start": "babel-node getLeaderboardData.js",
-		"calData": "babel-node getCalendarData.js",
+		"start": "babel-node getLeaderboardData.js #Daten für die App",
+		"calData": "babel-node getCalendarData.js #Datenfür die Webseite und Terminbereich der APp",
 		"lbData": "babel-node getLeaderboardData.js",
 		"getRegularUpdates": "babel-node getCalendarData.js && babel-node getLeaderboardData.js",
 		"all": "babel-node getHallenverzeichnis.js && babel-node getCalendarData.js && babel-node getLeaderboardData.js",
