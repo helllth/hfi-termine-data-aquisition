@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import md5 from 'md5';
-() => console.log(`leaderboard.${team}.json geschrieben`);
+
 export const writeFileWithMD5 = (
 	name,
 	data,
