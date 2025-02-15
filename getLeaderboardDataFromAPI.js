@@ -45,6 +45,24 @@ function transformGamesData(rawData) {
     }));
 }
 
+// Helper function to transform leaderboard data
+function transformLeaderboardData(rawData) {
+    if (!rawData || !rawData.dataList) return [];
+    
+    return rawData.dataList.map(team => ({
+        platz: String(team.tabScore),
+        name: String(team.tabTeamname),
+        spiele: String(team.numPlayedGames),
+        siege: String(team.numWonGames),
+        unentschieden: String(team.numEqualGames),
+        niederlagen: String(team.numLostGames),
+        torePlus: String(team.numGoalsShot),
+        toreMinus: String(team.numGoalsGot),
+        punktePlus: String(team.pointsPlus),
+        punkteMinus: String(team.pointsMinus)
+    }));
+}
+
 // Main async function to process all teams
 async function processTeams() {
     for (const category of Object.keys(teams[saison])) {
@@ -72,14 +90,15 @@ async function processTeams() {
                     JSON.stringify(leaderboardData, null, 2)
                 );
 
-                // For now, we're keeping the leaderboard data as is
+                // Transform and write simplified leaderboard data
+                const simplifiedLeaderboardData = transformLeaderboardData(leaderboardData[0]); // Taking first element as it contains the team data
                 writeFileWithMD5(
                     `out/json/current/leaderboards/${teamKey}.json`,
-                    JSON.stringify(leaderboardData, null, 2)
+                    JSON.stringify(simplifiedLeaderboardData, null, 2)
                 );
                 writeFileWithMD5(
                     `out/json/${saison}/leaderboards/${teamKey}.json`,
-                    JSON.stringify(leaderboardData, null, 2)
+                    JSON.stringify(simplifiedLeaderboardData, null, 2)
                 );
                 console.log(`Leaderboard data saved for ${team.name}`);
 
