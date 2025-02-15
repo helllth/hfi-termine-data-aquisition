@@ -106,18 +106,24 @@ function transformGameData(game, teamKey) {
     const dateInfo = parseDateAndTime(game.datum);
     const hallInfo = getHallDetails(game.halle);
 
-    // Find the team's league name from teams.json
+    // Find the team's league name and prefix from teams.json
     let leagueName = '';
+    let prefix = '';
     for (const category of Object.keys(teams[saison])) {
         if (teams[saison][category].teams[teamKey]) {
-            leagueName = teams[saison][category].teams[teamKey].leaguename;
+            const team = teams[saison][category].teams[teamKey];
+            leagueName = team.leaguename;
+            prefix = team.calLeaguePrefix || '';
             break;
         }
     }
 
+    // Combine prefix and league name
+    const staffel = prefix ? `${prefix} - ${leagueName}` : leagueName;
+
     return {
         Nummer: game.nr,
-        Staffel: leagueName,
+        Staffel: staffel,
         Datum: dateInfo.date,
         Zeit: dateInfo.time,
         Hallennummer: game.halle,
