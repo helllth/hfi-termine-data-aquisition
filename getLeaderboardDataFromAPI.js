@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import fetch from 'node-fetch';
-import { writeFileWithMD5 } from './tools';
+import path from 'path';
+import { writeFileWithMD5, shortenTeamName } from './tools';
 
 // read config
 let teams = fs.readJsonSync('in/teams.json');
@@ -8,23 +9,31 @@ let seasonConf = fs.readJsonSync('in/seasonConf.json');
 
 const saison = seasonConf.current;
 
-// Ensure all necessary directories exist
-// Current season directories
-fs.ensureDirSync('out/jsonRaw/current/leaderboards/');
-fs.ensureDirSync('out/jsonRaw/current/games.and.results/hfi/');
-fs.ensureDirSync('out/jsonRaw/config');
-fs.ensureDirSync('out/json/current/leaderboards/');
-fs.ensureDirSync('out/json/current/games.and.results/hfi/');
+// Create output directories
+fs.ensureDirSync('out/jsonRaw');
+fs.ensureDirSync('out/json');
 fs.ensureDirSync('out/json/config');
 
-// Specific season directories
+// Create season specific directories
 fs.ensureDirSync(`out/jsonRaw/${saison}/leaderboards/`);
 fs.ensureDirSync(`out/jsonRaw/${saison}/games.and.results/hfi/`);
 fs.ensureDirSync(`out/json/${saison}/leaderboards/`);
 fs.ensureDirSync(`out/json/${saison}/games.and.results/hfi/`);
 
-// Copy in folder to config
-fs.copySync('in', 'out/json/config', { overwrite: true });
+// Copy config files with MD5
+const configDir = 'in';
+const targetDir = 'out/json/config';
+fs.ensureDirSync(targetDir);
+
+const configFiles = fs.readdirSync(configDir);
+configFiles.forEach(file => {
+    const sourcePath = path.join(configDir, file);
+    const targetPath = path.join(targetDir, file);
+    if (fs.statSync(sourcePath).isFile()) {
+        const content = fs.readFileSync(sourcePath, 'utf8');
+        writeFileWithMD5(targetPath, content);
+    }
+});
 
 console.log('Processing data for season:', saison);
 
@@ -61,7 +70,7 @@ function transformGamesData(rawData, team) {
 
     return rawData.dataList.map(game => {
         const weekday = getWeekday(game.gDate);
-        return {
+        const transformedGame = {
             nr: game.gNo,
             datum: `${weekday}, ${game.gDate}, ${game.gTime}h`,
             halle: game.gGymnasiumNo,
@@ -78,13 +87,14 @@ function transformGamesData(rawData, team) {
             gID: game.gID,
             linkPI: `https://spo.handball4all.de/misc/sboPublicReports.php?sGID=${game.gID}`
         };
+        return transformedGame;
     });
 }
 
 // Helper function to transform leaderboard data
 function transformLeaderboardData(rawData, team) {
     if (!rawData || !rawData.dataList) return [];
-    
+
     return rawData.dataList.map(entry => ({
         platz: String(entry.tabScore),
         name: transformTeamName(entry.tabTeamname).replace(

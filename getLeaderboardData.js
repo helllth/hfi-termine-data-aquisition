@@ -24,12 +24,9 @@ let seasonConf = fs.readJsonSync('in/seasonConf.json');
 const saison = seasonConf.current;
 //const saison = 'test';
 
-fs.ensureDirSync('out/json/current/leaderboards/');
+fs.ensureDirSync('out/json');
+fs.ensureDirSync('out/html');
 fs.ensureDirSync('out/json/config');
-fs.ensureDirSync('out/json/current/games.and.results/complete/');
-fs.ensureDirSync('out/json/current/games.and.results/hfi/');
-fs.ensureDirSync('out/html/current/leaderboards/');
-fs.ensureDirSync('out/html/current/games.and.results/hfi/');
 
 fs.ensureDirSync(`out/json/${saison}/leaderboards/`);
 fs.ensureDirSync(`out/json/${saison}/games.and.results/complete/`);
@@ -139,17 +136,12 @@ Promise.all(promises).then((values) => {
 
 			if (true || teams[saison][team].league.length === 1) {
 				writeFileWithMD5(
-					`out/json/current/leaderboards/${team.key}.json`,
-					JSON.stringify(leaderBoard, null, 2)
-				);
-				writeFileWithMD5(
 					`out/json/${saison}/leaderboards/${team.key}.json`,
 					JSON.stringify(leaderBoard, null, 2)
 				);
 
 				//renderedHTML
 				let leaderBoardHtml = createLeaderBoardHtml(leaderBoard);
-				writeFileWithMD5(`out/html/current/leaderboards/${team.key}.html`, leaderBoardHtml);
 				writeFileWithMD5(
 					`out/html/${saison}/leaderboards/${team.key}.html`,
 					leaderBoardHtml
@@ -223,10 +215,6 @@ Promise.all(promises).then((values) => {
 			}
 
 			writeFileWithMD5(
-				`out/json/current/games.and.results/complete/${team.key}.json`,
-				JSON.stringify(gamesAndResults, null, 2)
-			);
-			writeFileWithMD5(
 				`out/json/${saison}/games.and.results/complete/${team.key}.json`,
 				JSON.stringify(gamesAndResults, null, 2)
 			);
@@ -236,10 +224,6 @@ Promise.all(promises).then((values) => {
 			let gamesAndResultsHtml = createGamesAndResultsHtml(
 				gamesAndResultsWitCompletehHalle,
 				team.filter || 'Illtal'
-			);
-			writeFileWithMD5(
-				`out/html/current/games.and.results/hfi/${team.key}.html`,
-				gamesAndResultsHtml
 			);
 			writeFileWithMD5(
 				`out/html/${saison}/games.and.results/hfi/${team.key}.html`,
@@ -254,10 +238,6 @@ Promise.all(promises).then((values) => {
 					(game) => game.heim.includes(filterTeam) || game.gast.includes(filterTeam)
 				);
 			}
-			writeFileWithMD5(
-				`out/json/current/games.and.results/hfi/${team.key}.json`,
-				JSON.stringify(filteredGamesAndResults, null, 2)
-			);
 			writeFileWithMD5(
 				`out/json/${saison}/games.and.results/hfi/${team.key}.json`,
 				JSON.stringify(filteredGamesAndResults, null, 2)

@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
-import { writeFileWithMD5 } from './tools';
+import path from 'path';
+import { writeFileWithMD5, shortenTeamName } from './tools.js';
 import seasonConf from './in/seasonConf.json';
 import teams from './in/teams.json';
 import hallenliste from './out/json/hallenverzeichnis.json';
@@ -10,8 +11,20 @@ const saison = seasonConf.current;
 fs.ensureDirSync('out/json');
 fs.ensureDirSync('out/json/config');
 
-// Copy in folder to config
-fs.copySync('in', 'out/json/config', { overwrite: true });
+// Copy config files with MD5
+const configDir = 'in';
+const targetDir = 'out/json/config';
+fs.ensureDirSync(targetDir);
+
+const configFiles = fs.readdirSync(configDir);
+configFiles.forEach(file => {
+    const sourcePath = path.join(configDir, file);
+    const targetPath = path.join(targetDir, file);
+    if (fs.statSync(sourcePath).isFile()) {
+        const content = fs.readFileSync(sourcePath, 'utf8');
+        writeFileWithMD5(targetPath, content);
+    }
+});
 
 // Helper function to get weekday in German
 function getWeekday(dateStr) {
