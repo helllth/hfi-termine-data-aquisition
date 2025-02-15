@@ -23,43 +23,82 @@ fs.ensureDirSync(`out/jsonRaw/${saison}/games.and.results/hfi/`);
 fs.ensureDirSync(`out/json/${saison}/leaderboards/`);
 fs.ensureDirSync(`out/json/${saison}/games.and.results/hfi/`);
 
+// Copy in folder to config
+fs.copySync('in', 'out/json/config', { overwrite: true });
+
 console.log('Processing data for season:', saison);
 
 const planUrl = "https://api.h4a.mobi/spo/spo-proxy_public.php?cmd=data&lvTypeNext=team&lvIDNext=";
 const leaderboardUrl = "https://api.h4a.mobi/spo/spo-proxy_public.php?cmd=data&lvTypeNext=class&subType=table&lvIDNext=";
 
+// Helper function to get weekday in German
+function getWeekday(dateStr) {
+    const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const [day, month, year] = dateStr.split('.');
+    const date = new Date(2000 + parseInt(year), parseInt(month) - 1, parseInt(day));
+    return days[date.getDay()];
+}
+
+// Helper function to transform team names consistently
+function transformTeamName(team) {
+    // Specific replacements first
+    team = team.replace('SG JSG HF Illtal - HSG Dudweiler-Fischbach', 'JSG HF Illtal');
+    team = team.replace('JSG Dirmingen-Schaumberg', 'JSG Dirm.-Schaumb.');
+
+    // Illtal-specific transformations
+    if (team.indexOf('Illtal') !== -1) {
+        if (team.indexOf('MSG') !== -1) {
+            team = team.replace('MSG ', '');
+        }
+    }
+
+    return team;
+}
+
 // Helper function to transform games data
-function transformGamesData(rawData) {
+function transformGamesData(rawData, team) {
     if (!rawData || !rawData.dataList) return [];
 
-    return rawData.dataList.map(game => ({
-        nr: game.gNo,
-        datum: `${game.gDate}, ${game.gTime}h`,
-        halle: game.gGymnasiumNo,
-        heim: game.gHomeTeam,
-        gast: game.gGuestTeam,
-        toreHeim: game.gHomeGoals,
-        toreGast: game.gGuestGoals,
-        gID: game.gID,
-        linkPI: `https://spo.handball4all.de/misc/sboPublicReports.php?sGID=${game.gID}`
-    }));
+    return rawData.dataList.map(game => {
+        const weekday = getWeekday(game.gDate);
+        return {
+            nr: game.gNo,
+            datum: `${weekday}, ${game.gDate}, ${game.gTime}h`,
+            halle: game.gGymnasiumNo,
+            heim: transformTeamName(game.gHomeTeam).replace(
+                team.gamesNameReplacementFrom || '',
+                team.gamesNameReplacementTo || ''
+            ),
+            gast: transformTeamName(game.gGuestTeam).replace(
+                team.gamesNameReplacementFrom || '',
+                team.gamesNameReplacementTo || ''
+            ),
+            toreHeim: game.gHomeGoals,
+            toreGast: game.gGuestGoals,
+            gID: game.gID,
+            linkPI: `https://spo.handball4all.de/misc/sboPublicReports.php?sGID=${game.gID}`
+        };
+    });
 }
 
 // Helper function to transform leaderboard data
-function transformLeaderboardData(rawData) {
+function transformLeaderboardData(rawData, team) {
     if (!rawData || !rawData.dataList) return [];
     
-    return rawData.dataList.map(team => ({
-        platz: String(team.tabScore),
-        name: String(team.tabTeamname),
-        spiele: String(team.numPlayedGames),
-        siege: String(team.numWonGames),
-        unentschieden: String(team.numEqualGames),
-        niederlagen: String(team.numLostGames),
-        torePlus: String(team.numGoalsShot),
-        toreMinus: String(team.numGoalsGot),
-        punktePlus: String(team.pointsPlus),
-        punkteMinus: String(team.pointsMinus)
+    return rawData.dataList.map(entry => ({
+        platz: String(entry.tabScore),
+        name: transformTeamName(entry.tabTeamname).replace(
+            team.leaderboardNameReplacementFrom || '',
+            team.leaderboardNameReplacementTo || ''
+        ),
+        spiele: String(entry.numPlayedGames),
+        siege: String(entry.numWonGames),
+        unentschieden: String(entry.numEqualGames),
+        niederlagen: String(entry.numLostGames),
+        torePlus: String(entry.numGoalsShot),
+        toreMinus: String(entry.numGoalsGot),
+        punktePlus: String(entry.pointsPlus),
+        punkteMinus: String(entry.pointsMinus)
     }));
 }
 
@@ -71,7 +110,7 @@ async function processTeams() {
         for (const teamKey of Object.keys(teams[saison][category].teams)) {
             const team = teams[saison][category].teams[teamKey];
             console.log(`\nProcessing Team: ${team.name} (${team.leaguename})`);
-            console.log(`API ID: ${team.h4a_id}`);
+            console.log(`API ID: ${team.h4a_team_id}`);
 
             try {
                 // Fetch leaderboard data
@@ -80,55 +119,47 @@ async function processTeams() {
                 const leaderboardResponse = await fetch(leaderboardFullUrl);
                 const leaderboardData = await leaderboardResponse.json();
 
-                // Write raw leaderboard data
-                writeFileWithMD5(
-                    `out/jsonRaw/current/leaderboards/${teamKey}.json`,
-                    JSON.stringify(leaderboardData, null, 2)
-                );
+                // Only process and write leaderboard if dataList is not empty
+                if (leaderboardData && leaderboardData[0] && leaderboardData[0].dataList && leaderboardData[0].dataList.length > 0) {
+                    const transformedLeaderboardData = transformLeaderboardData(leaderboardData[0], team);
+
+                    // Write leaderboard data
+                    writeFileWithMD5(
+                        `out/json/${saison}/leaderboards/${teamKey}.json`,
+                        JSON.stringify(transformedLeaderboardData, null, 2)
+                    );
+                } else {
+                    console.log('Skipping leaderboard generation - empty dataList');
+                }
+
+                // Fetch games data
+                const planFullUrl = planUrl + team.h4a_team_id;
+                console.log(`Fetching games data from: ${planFullUrl}`);
+                const planResponse = await fetch(planFullUrl);
+                const planData = await planResponse.json();
+
+                // Only process and write games if dataList is not empty
+                if (planData && planData[0] && planData[0].dataList && planData[0].dataList.length > 0) {
+                    const transformedGamesData = transformGamesData(planData[0], team);
+
+                    // Write games data
+                    writeFileWithMD5(
+                        `out/json/${saison}/games.and.results/hfi/${teamKey}.json`,
+                        JSON.stringify(transformedGamesData, null, 2)
+                    );
+                } else {
+                    console.log('Skipping games data generation - empty dataList');
+                }
+
+                // Write raw data
                 writeFileWithMD5(
                     `out/jsonRaw/${saison}/leaderboards/${teamKey}.json`,
                     JSON.stringify(leaderboardData, null, 2)
                 );
-
-                // Transform and write simplified leaderboard data
-                const simplifiedLeaderboardData = transformLeaderboardData(leaderboardData[0]); // Taking first element as it contains the team data
-                writeFileWithMD5(
-                    `out/json/current/leaderboards/${teamKey}.json`,
-                    JSON.stringify(simplifiedLeaderboardData, null, 2)
-                );
-                writeFileWithMD5(
-                    `out/json/${saison}/leaderboards/${teamKey}.json`,
-                    JSON.stringify(simplifiedLeaderboardData, null, 2)
-                );
-                console.log(`Leaderboard data saved for ${team.name}`);
-
-                // Fetch games and results data
-                const gamesFullUrl = planUrl + team.h4a_team_id;
-                console.log(`Fetching games data from: ${gamesFullUrl}`);
-                const gamesResponse = await fetch(gamesFullUrl);
-                const gamesData = await gamesResponse.json();
-
-                // Write raw games data
-                writeFileWithMD5(
-                    `out/jsonRaw/current/games.and.results/hfi/${teamKey}.json`,
-                    JSON.stringify(gamesData, null, 2)
-                );
                 writeFileWithMD5(
                     `out/jsonRaw/${saison}/games.and.results/hfi/${teamKey}.json`,
-                    JSON.stringify(gamesData, null, 2)
+                    JSON.stringify(planData, null, 2)
                 );
-
-                // Transform and write simplified games data
-                const simplifiedGamesData = transformGamesData(gamesData[0]); // Taking first element as it contains the team data
-                writeFileWithMD5(
-                    `out/json/current/games.and.results/hfi/${teamKey}.json`,
-                    JSON.stringify(simplifiedGamesData, null, 2)
-                );
-                writeFileWithMD5(
-                    `out/json/${saison}/games.and.results/hfi/${teamKey}.json`,
-                    JSON.stringify(simplifiedGamesData, null, 2)
-                );
-                console.log(`Games and results data saved for ${team.name}`);
             } catch (error) {
                 console.error(`Error fetching data for ${team.name}:`, error.message);
             }

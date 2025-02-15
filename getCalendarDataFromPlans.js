@@ -1,18 +1,26 @@
 import fs from 'fs-extra';
 import { writeFileWithMD5 } from './tools';
-
-// read config
-let teams = fs.readJsonSync('in/teams.json');
-let seasonConf = fs.readJsonSync('in/seasonConf.json');
-let hallenliste = fs.readJsonSync('out/json/hallenverzeichnis.json');
+import seasonConf from './in/seasonConf.json';
+import teams from './in/teams.json';
+import hallenliste from './out/json/hallenverzeichnis.json';
 
 const saison = seasonConf.current;
+
+// Ensure output directories exist
+fs.ensureDirSync('out/json');
+fs.ensureDirSync('out/json/config');
+
+// Copy in folder to config
+fs.copySync('in', 'out/json/config', { overwrite: true });
 
 // Helper function to parse date and time from datum string
 function parseDateAndTime(datum) {
     try {
+        // Remove weekday prefix if present (e.g., "So, " or "Sa, ")
+        const dateTimeStr = datum.replace(/^[A-Za-z]{2}, /, '');
+        
         // Input format: "15.02.25, 18:30h" or "31.05.25, h" or "31.05.25"
-        const [datePart, timePart] = datum.includes(',') ? datum.split(',') : [datum, ''];
+        const [datePart, timePart] = dateTimeStr.includes(',') ? dateTimeStr.split(',') : [dateTimeStr, ''];
         const [day, month, year] = datePart.split('.');
         
         // Handle case where time is missing or invalid
@@ -34,17 +42,16 @@ function parseDateAndTime(datum) {
             date: `${day}.${month}.${year}`,
             time: time,  // This will be either the actual time or "TBD"
             timestamp: date,
-            timestampNoLocale: date.toISOString()
+            weekday: datum.split(',')[0] // Keep the weekday in the returned object
         };
     } catch (error) {
-        console.log(`Warning: Could not parse date "${datum}", using fallback date`);
-        // Return a fallback date far in the future to avoid breaking the app
-        const fallbackDate = new Date('2099-12-31T00:00:00Z');
+        console.warn(`Warning: Could not parse date "${datum}", using fallback date`);
+        const fallbackDate = new Date();
         return {
-            date: datum.split(',')[0],
+            date: datum,
             time: 'TBD',
             timestamp: fallbackDate,
-            timestampNoLocale: fallbackDate.toISOString()
+            weekday: datum.split(',')[0]
         };
     }
 }
@@ -104,7 +111,8 @@ function transformGameData(game, teamKey) {
         Telefon: hallInfo.telefon,
         "Haftmittel?": hallInfo.haftmittel,
         ts: `${dateInfo.date}, ${dateInfo.time}:00`,
-        tsNoLocale: dateInfo.timestampNoLocale
+        tsNoLocale: dateInfo.timestamp.toISOString(),
+        weekday: dateInfo.weekday
     };
 }
 
@@ -137,45 +145,52 @@ async function processGames() {
     for (const category of Object.keys(teams[saison])) {
         // Process each team
         for (const teamKey of Object.keys(teams[saison][category].teams)) {
-            const gamesFile = `out/json/current/games.and.results/hfi/${teamKey}.json`;
+            const gamesFile = `out/json/${saison}/games.and.results/hfi/${teamKey}.json`;
             
             if (!fs.existsSync(gamesFile)) {
                 console.log(`No games file found for team ${teamKey}`);
                 continue;
             }
 
-            try {
-                const games = fs.readJsonSync(gamesFile);
-                
-                games.forEach(game => {
-                    const dateInfo = parseDateAndTime(game.datum);
-                    const weekInfo = isInCurrentOrNextWeek(dateInfo.timestamp);
-                    const transformedGame = transformGameData(game, teamKey);
+            const games = fs.readJsonSync(gamesFile);
 
-                    if (weekInfo.currentWeek) {
-                        currentWeekGames.push(transformedGame);
-                    } else if (weekInfo.nextWeek) {
-                        nextWeekGames.push(transformedGame);
-                    }
-                });
-            } catch (error) {
-                console.error(`Error processing games for team ${teamKey}:`, error);
-            }
+            // First filter games by week
+            games.forEach(game => {
+                const dateInfo = parseDateAndTime(game.datum);
+                const weekInfo = isInCurrentOrNextWeek(dateInfo.timestamp);
+
+                if (weekInfo.currentWeek) {
+                    currentWeekGames.push(Object.assign({}, game, {
+                        teamKey,
+                        dateInfo
+                    }));
+                } else if (weekInfo.nextWeek) {
+                    nextWeekGames.push(Object.assign({}, game, {
+                        teamKey,
+                        dateInfo
+                    }));
+                }
+            });
         }
     }
 
+    // Then transform only the filtered games
+    const transformedCurrentWeekGames = currentWeekGames.map(game => 
+        transformGameData(game, game.teamKey)
+    );
+    const transformedNextWeekGames = nextWeekGames.map(game => 
+        transformGameData(game, game.teamKey)
+    );
+
     // Sort games by date and time
     const sortByDateTime = (a, b) => new Date(a.tsNoLocale) - new Date(b.tsNoLocale);
-    currentWeekGames.sort(sortByDateTime);
-    nextWeekGames.sort(sortByDateTime);
+    transformedCurrentWeekGames.sort(sortByDateTime);
+    transformedNextWeekGames.sort(sortByDateTime);
 
     // Write the files
-    writeFileWithMD5('out/aktuelle.Woche.json', JSON.stringify(currentWeekGames, null, 2));
-    writeFileWithMD5('out/naechste.Woche.json', JSON.stringify(nextWeekGames, null, 2));
+    writeFileWithMD5('out/json/aktuelle.Woche.json', JSON.stringify(transformedCurrentWeekGames, null, 2));
+    writeFileWithMD5('out/json/naechste.Woche.json', JSON.stringify(transformedNextWeekGames, null, 2));
 }
-
-// Ensure output directory exists
-fs.ensureDirSync('out');
 
 // Run the main function
 processGames().catch(error => {

@@ -7,7 +7,7 @@ export const writeFileWithMD5 = (
 	encoding = 'utf8',
 	finished = () => console.log(`${name} geschrieben`)
 ) => {
-	fs.writeFileSync(name + '.md5', md5(data), { encoding });
+	fs.writeFileSync(name + '.md5', 'v2_' + md5(data), { encoding });
 	fs.writeFileSync(name, data, { encoding });
 	finished();
 };
