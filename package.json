@@ -34,7 +34,7 @@
 		"start": "babel-node getLeaderboardDataFromAPI.js #Daten für die App",
 		"startOld": "babel-node getLeaderboardData.js #Daten für die App",
 		"calDataLegacy": "babel-node getCalendarData.js #Datenfür die Webseite und Terminbereich der APp",
-		"calData": "babel-node getCalendarDataFromAPI.js #Datenfür die Webseite und Terminbereich der APp",
+		"calData": "babel-node getCalendarDataFromPlans.js #Datenfür die Webseite und Terminbereich der APp",
 		"lbDataLegacy": "babel-node getLeaderboardData.js",
 		"lbData": "babel-node getLeaderboardDataFromAPI.js",
 		"getRegularUpdates": "babel-node getCalendarData.js && babel-node getLeaderboardData.js",
