@@ -13,36 +13,46 @@ fs.ensureDirSync('out/json/config');
 // Copy in folder to config
 fs.copySync('in', 'out/json/config', { overwrite: true });
 
+// Helper function to get weekday in German
+function getWeekday(dateStr) {
+    const days = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+    const [day, month, year] = dateStr.split('.');
+    const date = new Date(2000 + parseInt(year), parseInt(month) - 1, parseInt(day));
+    return days[date.getDay()];
+}
+
 // Helper function to parse date and time from datum string
 function parseDateAndTime(datum) {
     try {
         // Remove weekday prefix if present (e.g., "So, " or "Sa, ")
         const dateTimeStr = datum.replace(/^[A-Za-z]{2}, /, '');
-        
+
         // Input format: "15.02.25, 18:30h" or "31.05.25, h" or "31.05.25"
         const [datePart, timePart] = dateTimeStr.includes(',') ? dateTimeStr.split(',') : [dateTimeStr, ''];
         const [day, month, year] = datePart.split('.');
-        
+
         // Handle case where time is missing or invalid
         const timeStr = timePart.replace('h', '').trim();
         const time = timeStr || 'TBD';  // Use TBD for missing times
-        
+
         // For timestamp calculations, use 00:00 if time is TBD
         const [hours, minutes] = timeStr ? time.split(':').map(num => num.padStart(2, '0')) : ['00', '00'];
-        
+
         // Create date string in ISO format
         const isoDate = `20${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours}:${minutes}:00`;
         const date = new Date(isoDate);
-        
+
         if (isNaN(date.getTime())) {
             throw new Error('Invalid date');
         }
-        
+
+        const weekday = getWeekday(`${day}.${month}.${year}`);
+
         return {
             date: `${day}.${month}.${year}`,
             time: time,  // This will be either the actual time or "TBD"
             timestamp: date,
-            weekday: datum.split(',')[0] // Keep the weekday in the returned object
+            weekday: weekday
         };
     } catch (error) {
         console.warn(`Warning: Could not parse date "${datum}", using fallback date`);
@@ -51,7 +61,7 @@ function parseDateAndTime(datum) {
             date: datum,
             time: 'TBD',
             timestamp: fallbackDate,
-            weekday: datum.split(',')[0]
+            weekday: ''
         };
     }
 }
@@ -96,9 +106,18 @@ function transformGameData(game, teamKey) {
     const dateInfo = parseDateAndTime(game.datum);
     const hallInfo = getHallDetails(game.halle);
 
+    // Find the team's league name from teams.json
+    let leagueName = '';
+    for (const category of Object.keys(teams[saison])) {
+        if (teams[saison][category].teams[teamKey]) {
+            leagueName = teams[saison][category].teams[teamKey].leaguename;
+            break;
+        }
+    }
+
     return {
         Nummer: game.nr,
-        Staffel: teamKey, // We might need to map this differently
+        Staffel: leagueName,
         Datum: dateInfo.date,
         Zeit: dateInfo.time,
         Hallennummer: game.halle,
@@ -146,7 +165,7 @@ async function processGames() {
         // Process each team
         for (const teamKey of Object.keys(teams[saison][category].teams)) {
             const gamesFile = `out/json/${saison}/games.and.results/hfi/${teamKey}.json`;
-            
+
             if (!fs.existsSync(gamesFile)) {
                 console.log(`No games file found for team ${teamKey}`);
                 continue;
@@ -175,10 +194,10 @@ async function processGames() {
     }
 
     // Then transform only the filtered games
-    const transformedCurrentWeekGames = currentWeekGames.map(game => 
+    const transformedCurrentWeekGames = currentWeekGames.map(game =>
         transformGameData(game, game.teamKey)
     );
-    const transformedNextWeekGames = nextWeekGames.map(game => 
+    const transformedNextWeekGames = nextWeekGames.map(game =>
         transformGameData(game, game.teamKey)
     );
 
