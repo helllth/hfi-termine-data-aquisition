@@ -11,15 +11,16 @@ const saison = seasonConf.current;
 // Helper function to parse date and time from datum string
 function parseDateAndTime(datum) {
     try {
-        // Input format: "15.02.25, 18:30h" or "31.05.25, h"
-        const [datePart, timePart] = datum.split(', ');
+        // Input format: "15.02.25, 18:30h" or "31.05.25, h" or "31.05.25"
+        const [datePart, timePart] = datum.includes(',') ? datum.split(',') : [datum, ''];
         const [day, month, year] = datePart.split('.');
         
         // Handle case where time is missing or invalid
-        const time = timePart.replace('h', '').trim() || '00:00';
+        const timeStr = timePart.replace('h', '').trim();
+        const time = timeStr || 'TBD';  // Use TBD for missing times
         
-        // Ensure two digits for hours and minutes
-        const [hours, minutes] = time.split(':').map(num => num.padStart(2, '0'));
+        // For timestamp calculations, use 00:00 if time is TBD
+        const [hours, minutes] = timeStr ? time.split(':').map(num => num.padStart(2, '0')) : ['00', '00'];
         
         // Create date string in ISO format
         const isoDate = `20${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${hours}:${minutes}:00`;
@@ -31,7 +32,7 @@ function parseDateAndTime(datum) {
         
         return {
             date: `${day}.${month}.${year}`,
-            time: `${hours}:${minutes}`,
+            time: time,  // This will be either the actual time or "TBD"
             timestamp: date,
             timestampNoLocale: date.toISOString()
         };
@@ -41,7 +42,7 @@ function parseDateAndTime(datum) {
         const fallbackDate = new Date('2099-12-31T00:00:00Z');
         return {
             date: datum.split(',')[0],
-            time: '00:00',
+            time: 'TBD',
             timestamp: fallbackDate,
             timestampNoLocale: fallbackDate.toISOString()
         };
@@ -50,14 +51,36 @@ function parseDateAndTime(datum) {
 
 // Helper function to get hall details
 function getHallDetails(hallenNr) {
-    const hall = hallenliste[hallenNr] || {};
+    if (!hallenNr) return {
+        name: '',
+        plz: '',
+        ort: '',
+        strasse: '',
+        telefon: '',
+        haftmittel: ''
+    };
+
+    // Find the hall in our list
+    const hall = hallenliste.find(h => h['#Nummer'] === hallenNr);
+    if (!hall) {
+        console.log(`Warning: Could not find hall with number ${hallenNr}`);
+        return {
+            name: '',
+            plz: '',
+            ort: '',
+            strasse: '',
+            telefon: '',
+            haftmittel: ''
+        };
+    }
+
     return {
-        name: hall.name || '',
-        plz: hall.plz || '',
-        ort: hall.ort || '',
-        strasse: hall.strasse || '',
-        telefon: hall.telefon || '',
-        haftmittel: hall.haftmittel || ''
+        name: hall.Name || '',
+        plz: hall.Plz || '',
+        ort: hall.Stadt || '',
+        strasse: hall.Strasse || '',
+        telefon: hall.Telefon || '',
+        haftmittel: hall.Haftmittel || ''
     };
 }
 
