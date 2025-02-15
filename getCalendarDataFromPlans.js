@@ -121,14 +121,18 @@ function transformGameData(game, teamKey) {
     // Combine prefix and league name
     const staffel = prefix ? `${prefix} - ${leagueName}` : leagueName;
 
+    // Add scores to team names if results are available and not empty
+    const heim = game.toreHeim && game.toreHeim.trim() ? `${game.heim}\n${game.toreHeim}` : game.heim;
+    const gast = game.toreGast && game.toreGast.trim() ? `${game.gast}\n${game.toreGast}` : game.gast;
+
     return {
         Nummer: game.nr,
         Staffel: staffel,
         Datum: dateInfo.date,
         Zeit: dateInfo.time,
         Hallennummer: game.halle,
-        Heim: game.heim,
-        Gast: game.gast,
+        Heim: heim,
+        Gast: gast,
         Hallenname: hallInfo.name,
         Plz: hallInfo.plz,
         Ort: hallInfo.ort,
