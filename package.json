@@ -1,6 +1,6 @@
 {
 	"name": "hfi-termine-data-aquisition",
-	"version": "1.5.1",
+	"version": "2.1.1",
 	"main": "getData.js",
 	"license": "MIT",
 	"config": {
@@ -31,9 +31,13 @@
 		"babel-preset-es2015": "^6.24.1"
 	},
 	"scripts": {
-		"start": "babel-node getLeaderboardData.js #Daten für die App",
-		"calData": "babel-node getCalendarData.js #Datenfür die Webseite und Terminbereich der APp",
-		"lbData": "babel-node getLeaderboardData.js",
+		"start": "babel-node getLeaderboardDataFromAPI.js #Daten für die App",
+		"startOld": "babel-node getLeaderboardData.js #Daten für die App",
+		"calDataLegacy": "babel-node getCalendarData.js #Datenfür die Webseite und Terminbereich der APp",
+		"calData": "babel-node getCalendarDataFromPlans.js #Datenfür die Webseite und Terminbereich der APp",
+		"copyHtml": "babel-node copyHtml.js #Datenfür die App",
+		"lbDataLegacy": "babel-node getLeaderboardData.js",
+		"lbData": "babel-node getLeaderboardDataFromAPI.js",
 		"getRegularUpdates": "babel-node getCalendarData.js && babel-node getLeaderboardData.js",
 		"all": "babel-node getHallenverzeichnis.js && babel-node getCalendarData.js && babel-node getLeaderboardData.js",
 		"gymList": "babel-node getHallenverzeichnis.js",

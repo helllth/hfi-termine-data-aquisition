@@ -65,8 +65,9 @@ out
 out2
 docker-compose.yml
 in
+outLegacy
 .package.json.without.version
 .version
 .githash
-
+out_server
 .DS_Store
