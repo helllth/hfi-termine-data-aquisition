@@ -85,6 +85,7 @@ function transformGamesData(rawData, team) {
             toreHeim: game.gHomeGoals,
             toreGast: game.gGuestGoals,
             gID: game.gID,
+            gClassID: game.gClassID,
             linkPI: `https://spo.handball4all.de/misc/sboPublicReports.php?sGID=${game.gID}`
         };
         return transformedGame;
