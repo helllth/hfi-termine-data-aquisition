@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import fetch from 'node-fetch';
 import path from 'path';
 import { writeFileWithMD5 } from './tools.js';
 import seasonConf from './in/config/seasonConf.json';
@@ -189,8 +188,18 @@ function transformGameData(game, teamKey) {
         "Haftmittel?": hallInfo.haftmittel,
         ts: `${dateInfo.date}, ${dateInfo.time}:00`,
         tsNoLocale: dateInfo.timestamp.toISOString(),
-        weekday: dateInfo.weekday
+        weekday: dateInfo.weekday,
+        gClassID: game.gClassID || '',
+        gID: game.gID || ''
     };
+}
+
+// Helper function to check if a date is today
+function isToday(date) {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
 }
 
 // Helper function to check if a date is in the current or next week
@@ -205,56 +214,51 @@ function isInCurrentOrNextWeek(date) {
 async function processGames() {
     const currentWeekGames = [];
     const nextWeekGames = [];
+    const todayGames = [];
 
-    // Process each team category
     for (const category of Object.keys(teams[saison])) {
-        // Process each team
-        for (const teamKey of Object.keys(teams[saison][category].teams)) {
-            const gamesFile = `out/json/${saison}/games.and.results/hfi/${teamKey}.json`;
-
-            if (!fs.existsSync(gamesFile)) {
-                console.log(`No games file found for team ${teamKey}`);
-                continue;
-            }
-
-            const games = fs.readJsonSync(gamesFile);
-
-            // First filter games by week
-            games.forEach(game => {
-                const dateInfo = parseDateAndTime(game.datum);
-                const weekInfo = isInCurrentOrNextWeek(dateInfo.timestamp);
-
-                if (weekInfo.currentWeek) {
-                    currentWeekGames.push(Object.assign({}, game, {
-                        teamKey,
-                        dateInfo
-                    }));
-                } else if (weekInfo.nextWeek) {
-                    nextWeekGames.push(Object.assign({}, game, {
-                        teamKey,
-                        dateInfo
-                    }));
+        for (const [teamKey, team] of Object.entries(teams[saison][category].teams)) {
+            try {
+                const gamesFile = `out/json/${saison}/games.and.results/hfi/${teamKey}.json`;
+                
+                if (!fs.existsSync(gamesFile)) {
+                    console.log(`No games file found for team ${teamKey}`);
+                    continue;
                 }
-            });
+
+                const games = fs.readJsonSync(gamesFile);
+
+                games.forEach(game => {
+                    const transformedGame = transformGameData(game, teamKey);
+                    const dateInfo = parseDateAndTime(game.datum);
+                    const weekInfo = isInCurrentOrNextWeek(dateInfo.timestamp);
+
+                    if (isToday(dateInfo.timestamp)) {
+                        todayGames.push(transformedGame);
+                    }
+                    if (weekInfo.currentWeek) {
+                        currentWeekGames.push(transformedGame);
+                    }
+                    if (weekInfo.nextWeek) {
+                        nextWeekGames.push(transformedGame);
+                    }
+                });
+            } catch (error) {
+                console.error(`Error processing team ${teamKey}:`, error);
+            }
         }
     }
 
-    // Then transform only the filtered games
-    const transformedCurrentWeekGames = currentWeekGames.map(game =>
-        transformGameData(game, game.teamKey)
-    );
-    const transformedNextWeekGames = nextWeekGames.map(game =>
-        transformGameData(game, game.teamKey)
-    );
-
-    // Sort games by date and time
+    // Sort all game arrays by date
     const sortByDateTime = (a, b) => new Date(a.tsNoLocale) - new Date(b.tsNoLocale);
-    transformedCurrentWeekGames.sort(sortByDateTime);
-    transformedNextWeekGames.sort(sortByDateTime);
+    currentWeekGames.sort(sortByDateTime);
+    nextWeekGames.sort(sortByDateTime);
+    todayGames.sort(sortByDateTime);
 
-    // Write the files
-    writeFileWithMD5('out/json/aktuelle.Woche.json', JSON.stringify(transformedCurrentWeekGames, null, 2));
-    writeFileWithMD5('out/json/naechste.Woche.json', JSON.stringify(transformedNextWeekGames, null, 2));
+    // Write files
+    writeFileWithMD5('out/json/aktuelle.woche.json', JSON.stringify(currentWeekGames, null, 2));
+    writeFileWithMD5('out/json/naechste.woche.json', JSON.stringify(nextWeekGames, null, 2));
+    writeFileWithMD5('out/json/heute.json', JSON.stringify(todayGames, null, 2));
 }
 
 // Run the main function
