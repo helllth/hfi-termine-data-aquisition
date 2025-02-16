@@ -41,6 +41,10 @@ function addSpacesForSyllabification(_word) {
 }
 
 async function getHallenlisten() {
+	fs.ensureDirSync(`out/raw`);
+	fs.ensureDirSync(`out/json`);
+
+
 	const url = 'https://spo.handball4all.de/Spielbetrieb/hallenliste.php';
 	let fd = new FormData();
 	// 'm=16' -F 'nm=0' -F 'clubno=210032' -F 'lgym=1' -F 'own=1' -F 'onefile=1' -F
