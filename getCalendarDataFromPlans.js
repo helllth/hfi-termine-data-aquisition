@@ -7,6 +7,30 @@ import hallenliste from './out/json/hallenverzeichnis.json';
 
 const saison = seasonConf.current;
 
+// Calculate week ranges once at the start
+const now = new Date();
+const currentWeekStart = new Date(now);
+currentWeekStart.setHours(0, 0, 0, 0);
+const daysSinceMonday = (now.getDay() + 6) % 7; // Days since last Monday (Monday=0, Sunday=6)
+currentWeekStart.setDate(now.getDate() - daysSinceMonday); // Go back to last Monday
+
+const currentWeekEnd = new Date(currentWeekStart);
+currentWeekEnd.setDate(currentWeekStart.getDate() + 6);
+currentWeekEnd.setHours(23, 59, 59, 999);
+
+const nextWeekStart = new Date(currentWeekEnd);
+nextWeekStart.setDate(currentWeekEnd.getDate() + 1);
+nextWeekStart.setHours(0, 0, 0, 0);
+
+const nextWeekEnd = new Date(nextWeekStart);
+nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
+nextWeekEnd.setHours(23, 59, 59, 999);
+
+console.log('Date ranges for game filtering:');
+console.log('Current week:', formatDate(currentWeekStart), 'to', formatDate(currentWeekEnd));
+console.log('Next week:', formatDate(nextWeekStart), 'to', formatDate(nextWeekEnd));
+console.log('----------------------------------------');
+
 // Ensure output directories exist
 fs.ensureDirSync('out/json');
 fs.ensureDirSync('out/json/config');
@@ -77,6 +101,16 @@ function parseDateAndTime(datum) {
             weekday: ''
         };
     }
+}
+
+// Helper function to format date
+function formatDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}.${month}.${year} ${hours}:${minutes}h`;
 }
 
 // Helper function to get hall details
@@ -160,20 +194,8 @@ function transformGameData(game, teamKey) {
 
 // Helper function to check if a date is in the current or next week
 function isInCurrentOrNextWeek(date) {
-    const now = new Date();
-    const currentWeekStart = new Date(now);
-    currentWeekStart.setHours(0, 0, 0, 0);
-    currentWeekStart.setDate(now.getDate() - now.getDay() + 1); // Monday of current week
-
-    const nextWeekStart = new Date(currentWeekStart);
-    nextWeekStart.setDate(currentWeekStart.getDate() + 7);
-
-    const nextWeekEnd = new Date(nextWeekStart);
-    nextWeekEnd.setDate(nextWeekStart.getDate() + 6);
-    nextWeekEnd.setHours(23, 59, 59, 999);
-
     return {
-        currentWeek: date >= currentWeekStart && date < nextWeekStart,
+        currentWeek: date >= currentWeekStart && date <= currentWeekEnd,
         nextWeek: date >= nextWeekStart && date <= nextWeekEnd
     };
 }
