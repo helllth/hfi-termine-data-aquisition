@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import fetch from 'node-fetch';
 import path from 'path';
-import { writeFileWithMD5, shortenTeamName } from './tools';
+import { writeFileWithMD5, shortenTeamName } from './tools.js';
 
 // read config
-let teams = fs.readJsonSync('in/teams.json');
-let seasonConf = fs.readJsonSync('in/seasonConf.json');
+let teams = fs.readJsonSync('in/config/teams.json');
+let seasonConf = fs.readJsonSync('in/config/seasonConf.json');
 
 const saison = seasonConf.current;
 
@@ -21,7 +21,7 @@ fs.ensureDirSync(`out/json/${saison}/leaderboards/`);
 fs.ensureDirSync(`out/json/${saison}/games.and.results/hfi/`);
 
 // Copy config files with MD5
-const configDir = 'in';
+const configDir = 'in/config';
 const targetDir = 'out/json/config';
 fs.ensureDirSync(targetDir);
 
